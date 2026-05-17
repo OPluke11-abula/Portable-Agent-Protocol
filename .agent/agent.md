@@ -1,4 +1,4 @@
-﻿---
+---
 name: portable-agent
 version: "0.1.0"
 description: >
@@ -9,6 +9,22 @@ tools:
   - search_web
   - query_db
   - code_executor
+protocol:
+  root: .agent/
+  manifest: .agent/agent.md
+  entrypoints:
+    overview: .agent/README.md
+    skills: .agent/skills.md
+    prompts: .agent/prompts.md
+    memory: .agent/memory.md
+    workflows: .agent/workflows.md
+  directories:
+    core: .agent/core/
+    skills: .agent/skills/
+    prompts: .agent/prompts/
+    memory: .agent/memory/
+    workflows: .agent/workflows/
+    knowledge_base: .agent/knowledge_base/
 memory:
   backend: local
   path: .agent/memory/
@@ -18,28 +34,35 @@ workflows:
   path: .agent/workflows.md
 ---
 
-# Agent Protocol
+# Agent Protocol Manifest
 
-This file is the source-of-truth runtime manifest for the Portable Agent.
-The YAML front matter above is read by the Python runtime.
+This file is the executable source of truth for the Portable Agent.
+The current Python reference runtime reads the YAML front matter above.
 
-## Runtime responsibilities
+## Layout Model
+
+- `agent.md`: executable manifest and runtime-declared layout
+- top-level `.agent/*.md` entry documents: runtime-facing registries and
+  contracts
+- `.agent/*/` subdirectories: detailed specs, policies, and reusable templates
+
+## Runtime Responsibilities
 
 - Route natural-language or structured requests to the right tool
 - Maintain local memory state for context persistence
-- Load prompt templates from `.agent/prompts.md`
+- Load prompt snippets from `.agent/prompts.md`
 - Execute workflows defined in `.agent/workflows.md`
 
-## Protocol documentation layers
+## Read Order
 
-The runtime manifest lives in this file, but the richer protocol specification is now split across subdirectories:
+1. Read this file first
+2. Read `.agent/README.md` for the three-layer architecture
+3. Read the relevant top-level entry document
+4. Read task-specific leaf docs from the matching subdirectory
 
-- `.agent/core/`: engine, router, and logger responsibilities
-- `.agent/skills/`: detailed skill contracts and writeback guidance
-- `.agent/prompts/`: reusable prompt templates and error-handling patterns
-- `.agent/memory/`: short-term and long-term memory notes
-- `.agent/knowledge_base/`: static knowledge placeholders and architecture references
+## Merge Rule
 
-## Merge rule
-
-When runtime-level configuration and protocol documentation overlap, preserve the YAML front matter in this file as the executable source of truth, and use the subdirectories for deeper guidance and templates.
+When runtime-level configuration and protocol documentation overlap, preserve
+the YAML front matter in this file as the executable source of truth. The
+top-level entry documents define runtime-facing contracts, and the subdirectory
+documents provide deeper guidance and templates.

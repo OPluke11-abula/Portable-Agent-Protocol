@@ -1,12 +1,13 @@
-# Skills Registry
+# Skills Directory Index
 
-本目錄定義 Agent 可用技能。
+This directory stores one detailed contract per runtime skill.
 
-每個技能檔至少應說明：
+Each skill file should describe:
 
-- 技能用途
-- 適用情境
-- 輸入格式
-- 輸出格式
-- 失敗處理
-- 是否需要回寫記憶
+- purpose
+- required inputs
+- expected outputs
+- safety notes
+- verification or writeback guidance
+
+For the runtime module registry, start with `.agent/skills.md`.

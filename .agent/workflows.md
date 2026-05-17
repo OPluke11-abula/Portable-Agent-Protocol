@@ -1,9 +1,10 @@
-# Workflows
+# Workflow Registry
 
-Self-evolving workflow definitions for the Portable Agent.
+This file is the canonical runtime-facing workflow registry for the Portable
+Agent.
 
-Each workflow is a named sequence of steps.  Steps map to tool calls or
-built-in actions (`respond`, `remember`, `summarise`).
+Each workflow is a named sequence of steps. Steps map to tool calls or built-in
+actions (`respond`, `remember`, `summarise`).
 
 ---
 
@@ -58,4 +59,15 @@ steps:
 
 1. Define a new YAML block in this file with a unique `name`.
 2. Reference prompt templates by name in `action: respond` steps.
-3. The engine will discover and register the workflow automatically.
+3. Add a matching note under `.agent/workflows/`.
+4. The engine will discover and register the workflow automatically.
+
+---
+
+## Detailed workflow notes
+
+See:
+
+- `.agent/workflows/__init__.md`
+- `.agent/workflows/research_and_report.md`
+- `.agent/workflows/run_and_explain.md`

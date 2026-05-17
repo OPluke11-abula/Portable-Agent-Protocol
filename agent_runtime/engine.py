@@ -1,4 +1,4 @@
-"""Core engine — loads .agent/agent.md config and orchestrates routing."""
+"""Core engine that loads .agent/agent.md config and orchestrates routing."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 
 def load_agent_config(agent_md: str | Path = ".agent/agent.md") -> dict[str, Any]:
-    """Parse YAML front-matter from *agent_md* and return it as a dict."""
+    """Parse YAML front matter from *agent_md* and return it as a dict."""
     path = Path(agent_md)
     if not path.exists():
         raise FileNotFoundError(f"Agent config not found: {path}")
@@ -32,14 +32,114 @@ def load_agent_config(agent_md: str | Path = ".agent/agent.md") -> dict[str, Any
     return config
 
 
+def _project_root_from_config(config_path: Path) -> Path:
+    """Infer the project root from a config path."""
+    if config_path.parent.name == ".agent":
+        return config_path.parent.parent
+    return config_path.parent
+
+
+def _resolve_declared_path(raw_path: str, config_path: Path) -> Path:
+    """Resolve a declared protocol path against the project or config dir."""
+    candidate = Path(raw_path)
+    if candidate.is_absolute():
+        return candidate
+
+    project_root = _project_root_from_config(config_path)
+    config_dir = config_path.parent
+
+    project_relative = project_root / candidate
+    config_relative = config_dir / candidate
+
+    if project_relative.exists():
+        return project_relative
+    if config_relative.exists():
+        return config_relative
+    return project_relative
+
+
+def _iter_declared_paths(config: dict[str, Any]) -> list[tuple[str, str]]:
+    """Return known path-like fields declared in the agent config."""
+    declared: list[tuple[str, str]] = []
+
+    for section_name in ("memory", "prompts", "workflows"):
+        section = config.get(section_name)
+        if isinstance(section, dict):
+            value = section.get("path")
+            if isinstance(value, str):
+                declared.append((f"{section_name}.path", value))
+
+    protocol = config.get("protocol")
+    if not isinstance(protocol, dict):
+        return declared
+
+    for key in ("root", "manifest"):
+        value = protocol.get(key)
+        if isinstance(value, str):
+            declared.append((f"protocol.{key}", value))
+
+    for group_name in ("entrypoints", "directories"):
+        group = protocol.get(group_name)
+        if not isinstance(group, dict):
+            continue
+        for name, value in group.items():
+            if isinstance(value, str):
+                declared.append((f"protocol.{group_name}.{name}", value))
+
+    return declared
+
+
+def validate_agent_config_paths(
+    config: dict[str, Any], agent_md: str | Path = ".agent/agent.md"
+) -> None:
+    """Validate that declared protocol paths exist."""
+    config_path = Path(agent_md)
+
+    for label, raw_path in _iter_declared_paths(config):
+        resolved = _resolve_declared_path(raw_path, config_path)
+        if not resolved.exists():
+            raise FileNotFoundError(
+                f"Declared path '{label}' does not exist: {raw_path} "
+                f"(resolved to {resolved})"
+            )
+
+    protocol = config.get("protocol")
+    if not isinstance(protocol, dict):
+        return
+
+    directories = protocol.get("directories")
+    if not isinstance(directories, dict):
+        return
+
+    skills_dir_raw = directories.get("skills")
+    if not isinstance(skills_dir_raw, str):
+        return
+
+    skills_dir = _resolve_declared_path(skills_dir_raw, config_path)
+    tools = config.get("tools")
+    if not isinstance(tools, list):
+        return
+
+    for tool_name in tools:
+        if not isinstance(tool_name, str):
+            continue
+        skill_spec = skills_dir / f"{tool_name}.md"
+        if not skill_spec.exists():
+            raise FileNotFoundError(
+                f"Missing skill spec for tool '{tool_name}': {skill_spec}"
+            )
+
+
 class AgentEngine:
     """Bootstraps the agent runtime from the protocol config."""
 
     def __init__(self, config_path: str | Path = ".agent/agent.md") -> None:
-        self.config = load_agent_config(config_path)
+        self.config_path = Path(config_path)
+        self.config = load_agent_config(self.config_path)
+        validate_agent_config_paths(self.config, self.config_path)
         self.router = Router(tools=self.config.get("tools", []))
         logger.info(
-            "AgentEngine initialised — name=%s version=%s tools=%s",
+            "AgentEngine initialised - name=%s version=%s tools=%s",
             self.config.get("name"),
             self.config.get("version"),
             self.config.get("tools"),
@@ -52,7 +152,7 @@ class AgentEngine:
     def run(self, tool: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Dispatch *params* to *tool* via the router and return the result."""
         params = params or {}
-        logger.info("Engine dispatching — tool=%s params=%s", tool, params)
+        logger.info("Engine dispatching - tool=%s params=%s", tool, params)
         result = self.router.route(tool, params)
-        logger.info("Engine result — tool=%s result=%s", tool, result)
+        logger.info("Engine result - tool=%s result=%s", tool, result)
         return result
