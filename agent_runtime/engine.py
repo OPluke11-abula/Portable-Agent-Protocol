@@ -274,3 +274,10 @@ class AgentEngine:
         result = self.router.route(tool, params)
         logger.info("Engine result - tool=%s result=%s", tool, result)
         return result
+
+    def execute_workflow(self, workflow_name: str, inputs: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Load and execute a workflow DAG by its name."""
+        from .workflow import WorkflowExecutor
+        executor = WorkflowExecutor(self)
+        dag = executor.load(workflow_name)
+        return executor.run(dag, inputs or {})

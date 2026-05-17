@@ -1,3 +1,25 @@
+---
+name: research_and_report
+steps:
+  - id: search
+    tool: search_web
+    params:
+      query: "{{ inputs.topic }}"
+      limit: 5
+  - id: store
+    action: remember
+    depends_on: [search]
+    params:
+      key: research_results
+      value: "{{ search.output }}"
+  - id: report
+    action: respond
+    depends_on: [store]
+    params:
+      template: summarise_history
+      history: "{{ store.status }}"
+---
+
 # Workflow Note: research_and_report
 
 Canonical registry entry: `.agent/workflows.md`
@@ -17,5 +39,5 @@ Search for a topic, persist the collected results, and return a concise report.
 
 ## Maintenance Notes
 
-- Keep the executable step sequence in `.agent/workflows.md`
-- Use this file for rationale, usage notes, and future extension ideas
+- Keep the executable DAG definition in the YAML front matter of this file.
+- Use this file's body for rationale, usage notes, and future extension ideas.

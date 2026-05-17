@@ -1,3 +1,46 @@
+---
+name: run_and_explain
+steps:
+  - id: execute
+    tool: code_executor
+    params:
+      code: "{{ inputs.code }}"
+  - id: explain
+    action: respond
+    depends_on: [execute]
+    params:
+      template: task_complete
+      result: "{{ execute.output }}"
+---
+
+# Workflow Note: run_and_explain
+
+Canonical registry entry: `.agent/workflows.md`
+
+## Purpose
+
+Execute a code snippet and explain the result in a user-facing response.
+
+## Inputs
+
+- `code`
+
+## Outputs
+---
+name: run_and_explain
+steps:
+  - id: execute
+    tool: code_executor
+    params:
+      code: "{{ inputs.code }}"
+  - id: explain
+    action: respond
+    depends_on: [execute]
+    params:
+      template: task_complete
+      result: "{{ execute.output }}"
+---
+
 # Workflow Note: run_and_explain
 
 Canonical registry entry: `.agent/workflows.md`
@@ -17,5 +60,5 @@ Execute a code snippet and explain the result in a user-facing response.
 
 ## Maintenance Notes
 
-- Keep the executable step sequence in `.agent/workflows.md`
-- Use this file for rationale, usage notes, and guardrail discussion
+- Keep the executable DAG definition in the YAML front matter of this file.
+- Use this file's body for rationale, usage notes, and future extension ideas.

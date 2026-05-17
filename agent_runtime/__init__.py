@@ -11,6 +11,7 @@ from .memory import (
     create_memory_backend,
 )
 from .router import Router
+from .workflow import WorkflowExecutor, DAG, Step
 
 __all__ = [
     "AgentEngine",
@@ -24,5 +25,8 @@ __all__ = [
     "SQLiteBackend",
     "VectorDBBackend",
     "create_memory_backend",
+    "WorkflowExecutor",
+    "DAG",
+    "Step",
 ]
 __version__ = "0.1.0"
