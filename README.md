@@ -43,6 +43,12 @@ Build trust by displaying the **PAP-Compatible Badge** on your framework.
 - **Official Integrations:** View our `examples/las-integration/` to see how the **Lightweight Agent System (LAS)** natively adopts PAP.
 [![PAP Compatible](https://img.shields.io/badge/PAP--Compatible-blue.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol)
 
+### 6. The `.agent/ Hub` Ecosystem
+Stop building agents from scratch. The Hub is a Git-backed public registry where you can discover, download, and share agent profiles.
+- **Clone an Agent:** `python cli.py hub clone username/agent-name`
+- **Publish an Agent:** `python cli.py hub pack` (Securely archives your workspace without leaking memory or secrets).
+- **Architecture:** Read the [Hub Specification](docs/HUB_SPEC.md).
+
 ## 🌟 Key Features / 新增亮點
 
 ### 1. Model Context Protocol (MCP) Integration

@@ -141,6 +141,63 @@ def main(argv: list[str] | None = None) -> int:
         print("Done!")
         return 0
 
+    if args.command and args.command[0] == "hub":
+        if len(args.command) < 2:
+            print("Error: 'hub' requires a subcommand ('pack' or 'clone').", file=sys.stderr)
+            return 1
+            
+        subcmd = args.command[1]
+        
+        if subcmd == "pack":
+            import tarfile
+            agent_dir = Path(".agent")
+            if not agent_dir.exists():
+                print("Error: .agent/ directory not found.", file=sys.stderr)
+                return 1
+            out_file = ".agent-profile.tar.gz"
+            print(f"Packing {agent_dir} to {out_file} (excluding 'memory' and secrets)...")
+            with tarfile.open(out_file, "w:gz") as tar:
+                for path in agent_dir.rglob("*"):
+                    # Exclude memory and secrets
+                    if "memory" in path.parts or path.suffix == ".env" or path.suffix == ".sqlite":
+                        continue
+                    tar.add(path, arcname=path.relative_to(agent_dir.parent))
+            print(f"Successfully packed to {out_file}")
+            return 0
+            
+        elif subcmd == "clone":
+            if len(args.command) < 3:
+                print("Error: 'hub clone' requires a repository name (e.g. username/repo).", file=sys.stderr)
+                return 1
+            repo_name = args.command[2]
+            print(f"Cloning {repo_name} from PAP Hub...")
+            import subprocess
+            import shutil
+            import tempfile
+            git_url = f"https://github.com/{repo_name}.git"
+            
+            with tempfile.TemporaryDirectory() as tmpdir:
+                try:
+                    subprocess.run(["git", "clone", "--depth", "1", git_url, tmpdir], check=True, capture_output=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Error cloning repository: {e.stderr.decode()}", file=sys.stderr)
+                    return 1
+                
+                src_agent = Path(tmpdir) / ".agent"
+                dest_agent = Path(".agent")
+                if not src_agent.exists():
+                    print("Error: Repository does not contain an .agent/ directory.", file=sys.stderr)
+                    return 1
+                    
+                if dest_agent.exists():
+                    print("Warning: Local .agent/ directory already exists. Overwriting...", file=sys.stderr)
+                    shutil.rmtree(dest_agent)
+                
+                shutil.copytree(src_agent, dest_agent)
+            
+            print(f"Successfully cloned {repo_name} into .agent/")
+            return 0
+
     config_path = Path(args.config)
     if not config_path.exists():
         print(f"Error: config file not found: {config_path}", file=sys.stderr)
