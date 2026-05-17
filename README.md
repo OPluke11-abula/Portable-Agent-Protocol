@@ -262,6 +262,99 @@ Use this priority order when documents overlap:
 4. `agent_runtime/`: Python reference implementation that must stay consistent
    with the protocol contract
 
+## 🚀 Roadmap & Strategy / 戰略藍圖與路線圖
+
+### Project Status / 專案現況總結
+
+**Current Strengths / 現有強項:**
+- **Clear Three-Layer Architecture**: Manifest → Runtime Entry Documents → Detailed Directories. (三層架構設計清晰，職責明確)
+- **Protocol-First Design**: `.agent/agent.md` as Single Source of Truth. (協定優先，降低與特定 runtime 的耦合)
+- **Validation**: Layout Validation + Tool Contract verification. (確保協定文件與 runtime 代碼不脫節)
+- **Bilingual Support**: Friendly to local and international communities. (中英雙語，兼顧在地與國際推廣)
+- **Engineering Standardization**: pyproject.toml, pytest, CLI entrypoint. (工程標準化，易於維護)
+- **Unique Philosophy**: "Documentation as Protocol" - readable by both AI and humans. (設計哲學獨特：「文件即協定」)
+
+**Current Weaknesses / 現有弱點:**
+- **No Schema Versioning**: Lack of a formal versioning mechanism (semver). (協定格式缺乏正式版本號機制)
+- **Python-only Runtime**: Limits adoption in JS/TS communities. (目前只有 Python runtime)
+- **Declarative Memory**: Lacks an executable persistence backend. (Memory contract 停留在聲明式，缺乏可執行的後端)
+- **Document-based Workflows**: Workflows are not executable DAGs. (Workflow 是文件描述而非可執行圖)
+- **Ambiguous Integrations**: Integration with LLM-Agent-System is not explicitly declared. (與 LLM-Agent-System 整合關係未明確)
+
+### Optimization Roadmap / 優化路線圖
+
+#### Phase 1: Protocol Maturation (0-3 Months) / 第一階段：協定成熟化（0–3 個月）
+1. **Schema Versioning / 協定版本化**: Add protocol versioning and semver rules to make PAP a trusted standard.
+2. **JSON Schema & CLI Validator**: Implement `pap validate` CLI to make the protocol machine-verifiable.
+3. **Memory Backend Abstractions / Memory Contract 實作化**: Implement replaceable memory backends (InMemory, SQLite, VectorDB).
+
+#### Phase 2: Ecosystem Building (3-6 Months) / 第二階段：生態建設（3–6 個月）
+4. **Workflow Execution Engine / Workflow 執行引擎**: Introduce DAG-driven workflow scheduling for true protocol-driven execution.
+5. **Cross-Language Runtime / 跨語言 Runtime 實作**: Build a TypeScript reference runtime and a Conformance Test Suite.
+6. **.agent/ Hub / 協定分享平台**: Launch a public platform to share Agent Profiles, skills, and prompts.
+
+#### Phase 3: Standardization (6-12 Months) / 第三階段：標準化競爭（6–12 個月）
+7. **Competitive Differentiation / 對標分析與差異化定位**: Position PAP clearly as the "AI-Native Workspace Protocol" compared to Anthropic MCP (tools) and Google A2A (communication).
+8. **Whitepaper & Community / 技術白皮書與社群佈局**: Publish a technical whitepaper and establish thought leadership.
+9. **Official LAS Integration / 正式整合 LLM-Agent-System**: Establish LAS as the official reference application.
+
+### Protocol Architecture Evolution / 協定架構演進圖
+
+```text
+Current (v0.x — Exploration)
+└── Markdown + YAML front matter | Python-only | Declarative memory | Document workflow
+
+↓ Phase 1
+
+v1.0 (Stability)
+└── Semver versioning | CLI validator | Memory Backend | PAP-LAS integration
+
+↓ Phase 2
+
+v1.x (Ecosystem)
+└── Workflow DAG | TypeScript Runtime | Conformance Test Suite
+
+↓ Phase 3
+
+v2.0 (Standardization)
+└── .agent/ Hub | Whitepaper | Multi-language runtimes | Community standard
+```
+
+```text
+現在（v0.x — 探索期）
+└── Markdown + YAML front matter | Python-only | 聲明式 memory | 文件式 workflow
+
+↓ 第一階段
+
+v1.0（協定穩定期）
+└── 版本化 semver | CLI validator | Memory Backend 實作 | PAP-LAS 整合宣告
+
+↓ 第二階段
+
+v1.x（生態建設期）
+└── Workflow DAG 執行 | TypeScript Runtime | Conformance Test Suite
+
+↓ 第三階段
+
+v2.0（標準競爭期）
+└── .agent/ Hub 上線 | 白皮書發布 | 多語言 runtime 生態 | 社群標準地位
+```
+
+### Market Opportunity & Strategy / 市場機會與戰略定位
+
+PAP occupies a unique "Protocol Layer" between foundation models and heavy application frameworks. Our strategic moats include:
+1. **First-Mover Advantage / 先發優勢**: Establishing mindshare for the `.agent/` workspace.
+2. **Network Effects / 網絡效應**: A growing ecosystem on the Hub increases value.
+3. **Standard Stickiness / 標準粘性**: High migration cost once adopted in production.
+
+PAP 佔據了「基礎模型 API」與「應用框架」之間的「協定層（Protocol Layer）」空白地帶，主要護城河包含先發優勢、生態網絡效應與標準粘性。
+
+### Top 3 Priorities / 最優先的三件事
+
+1. **Schema Versioning + CLI Validator / 實作協定版本化 + 發布 CLI validator**: The foundational requirement for community trust. (被社區嚴肅對待的最小門票)
+2. **Memory Backend Abstraction / 實作 Memory Backend 抽象層**: Transitioning memory from declarative to executable. (從「理念」變成「工具」的關鍵)
+3. **Whitepaper & Tech Talks / 發布技術白皮書並在社群演講**: Spreading the "Documentation as Protocol" philosophy. (傳播差異化哲學)
+
 ## Status / 目前狀態
 
 The repository currently includes a working Python reference runtime, layout
