@@ -9,6 +9,10 @@ tools:
   - search_web
   - query_db
   - code_executor
+mcp_servers:
+  sqlite:
+    command: "uvx"
+    args: ["mcp-server-sqlite", "--db-path", "test.db"]
 protocol:
   root: .agent/
   manifest: .agent/agent.md

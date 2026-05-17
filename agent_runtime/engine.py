@@ -205,7 +205,10 @@ class AgentEngine:
         self.config = load_agent_config(self.config_path)
         validate_agent_config_paths(self.config, self.config_path)
         self.layout = load_agent_layout(self.config, self.config_path)
-        self.router = Router(tools=self.config.get("tools", []))
+        self.router = Router(
+            tools=self.config.get("tools", []), 
+            mcp_servers=self.config.get("mcp_servers", {})
+        )
         logger.info(
             "AgentEngine initialised - name=%s version=%s tools=%s",
             self.config.get("name"),

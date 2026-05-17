@@ -28,6 +28,28 @@ Python runtime. It combines both parts:
 - `examples/`：protocol writeback 與 runtime simulation 範例
 - `USAGE.md`：將 `.agent/` 複製到其他專案的使用說明
 
+## 🌟 Key Features / 新增亮點
+
+### 1. Model Context Protocol (MCP) Integration
+The Python runtime includes `pap-mcp-bridge`, seamlessly connecting PAP with external MCP servers.
+- **Sync**: Run `python cli.py mcp sync` to dynamically generate Markdown contracts (`.agent/skills/*.md`) from MCP JSON Schemas.
+- **Execute**: The `AgentEngine` router dynamically forwards tool calls directly to the underlying MCP servers via stdio.
+
+### 2. VS Code Extension (Dev Tooling)
+PAP comes with an official VS Code extension (`vscode-extension/`) that provides:
+- **IntelliSense**: Real-time YAML schema validation and auto-complete for `agent.md`.
+- **UI Commands**: 1-click workspace initialization (`PAP: Initialize Workspace`) and MCP sync (`PAP: Sync MCP Servers`).
+
+### 1. MCP 雙向橋接 (Model Context Protocol)
+Python runtime 內建了 `pap-mcp-bridge`，無縫銜接外部 MCP 伺服器：
+- **同步 (Sync)**：執行 `python cli.py mcp sync` 自動將 MCP 的 JSON Schema 轉譯為標準的 Markdown 工具合約 (`.agent/skills/*.md`)。
+- **動態執行 (Execute)**：`AgentEngine` 路由會自動攔截 MCP 工具呼叫，並透過 stdio 轉發給底層 MCP Server。
+
+### 2. VS Code 開發工具鏈
+PAP 提供了專屬的 VS Code 擴充套件 (`vscode-extension/`)：
+- **智慧提示 (IntelliSense)**：為 `agent.md` 提供即時的 YAML Schema 驗證與自動完成提示。
+- **UI 捷徑**：提供一鍵生成工作區 (`PAP: Initialize Workspace`) 與同步 MCP (`PAP: Sync MCP Servers`) 功能。
+
 ## Architecture / 架構
 
 The `.agent/` workspace has three layers.
@@ -246,5 +268,4 @@ The repository currently includes a working Python reference runtime, layout
 validation, layout discovery, CLI entrypoint, tool router, and tests for the
 declared `.agent/` structure.
 
-目前 repository 已包含可運作的 Python reference runtime、layout validation、
-layout discovery、CLI entrypoint、tool router，以及針對 `.agent/` 宣告結構的測試。
+目前的 repository 已包含可運作的 Python runtime、MCP 雙向橋接器 (pap-mcp-bridge)、以及 VS Code 擴充套件。我們成功將 PAP 推升為一個可被機器驗證、具備強大開發工具鏈的企業級標準。

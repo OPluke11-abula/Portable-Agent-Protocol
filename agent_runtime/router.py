@@ -19,10 +19,22 @@ class Router:
     ``run(params: dict) -> dict`` function.
     """
 
-    def __init__(self, tools: list[str] | None = None) -> None:
+    def __init__(self, tools: list[str] | None = None, mcp_servers: dict[str, Any] | None = None) -> None:
         self._registry: dict[str, Any] = {}
         for name in tools or []:
             self._register(name)
+            
+        # Register MCP tools if configured
+        if mcp_servers:
+            from .mcp_bridge import execute_mcp_tool
+            for server_name, server_config in mcp_servers.items():
+                # We can't synchronously fetch tools at init without blocking, 
+                # so we rely on the manifest 'tools' list to map to MCP endpoints,
+                # OR we dynamically route any tool starting with mcp_{server_name}_
+                pass
+            self._mcp_servers = mcp_servers
+        else:
+            self._mcp_servers = {}
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -53,9 +65,21 @@ class Router:
 
         Raises ``KeyError`` if the tool is not registered.
         """
+        # Check if it's an MCP tool (format: mcp_{server_name}_{tool_name})
+        if tool.startswith("mcp_"):
+            parts = tool.split("_", 2)
+            if len(parts) >= 3:
+                server_name = parts[1]
+                mcp_tool_name = parts[2]
+                
+                if server_name in self._mcp_servers:
+                    from .mcp_bridge import execute_mcp_tool
+                    logger.debug("Routing to MCP server=%s tool=%s params=%s", server_name, mcp_tool_name, params)
+                    return execute_mcp_tool(self._mcp_servers[server_name], mcp_tool_name, params)
+                
         if tool not in self._registry:
             raise KeyError(
-                f"Unknown tool '{tool}'. Available: {self.available_tools}"
+                f"Unknown tool '{tool}'. Available local: {self.available_tools}"
             )
-        logger.debug("Routing to tool=%s params=%s", tool, params)
+        logger.debug("Routing to local tool=%s params=%s", tool, params)
         return self._registry[tool](params)

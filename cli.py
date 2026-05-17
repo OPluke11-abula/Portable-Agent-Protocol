@@ -2,6 +2,8 @@
 
 Usage
 -----
+    python cli.py init                   # scaffold a new .agent/ workspace
+    python cli.py mcp sync               # sync MCP server tools to .agent/skills/
     python cli.py                        # uses default .agent/agent.md
     python cli.py --config path/to/agent.md
     python cli.py --tool search_web --params '{"query": "hello world"}'
@@ -24,6 +26,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="portable-agent",
         description="Portable Agent Protocol reference CLI",
+    )
+    parser.add_argument(
+        "command",
+        nargs="*",
+        help="Command to run (e.g. 'init' or 'mcp sync')",
     )
     parser.add_argument(
         "--config",
@@ -49,10 +56,77 @@ def build_parser() -> argparse.ArgumentParser:
     )
     return parser
 
+def scaffold_workspace(base_dir: Path) -> None:
+    """Create a new .agent/ workspace with standard templates."""
+    agent_dir = base_dir / ".agent"
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    (agent_dir / "skills").mkdir(exist_ok=True)
+    (agent_dir / "prompts").mkdir(exist_ok=True)
+    (agent_dir / "workflows").mkdir(exist_ok=True)
+    (agent_dir / "memory").mkdir(exist_ok=True)
+    
+    agent_md = agent_dir / "agent.md"
+    if not agent_md.exists():
+        agent_md.write_text(
+            "---\n"
+            "name: new-agent\n"
+            "version: 0.1.0\n"
+            "purpose: Define the core purpose of this agent here.\n"
+            "language: en-US\n"
+            "authorization_level: interactive-approval\n"
+            "use_case_tags: [default-agent]\n"
+            "tools: []\n"
+            "---\n\n"
+            "# Agent Manifest\n"
+        )
+        print(f"Created {agent_md}")
+    
+    skill_template = agent_dir / "skills" / "_template.md"
+    if not skill_template.exists():
+        skill_template.write_text(
+            "---\nname: \"{{skill_name}}\"\ndescription: \"\"\n---\n\n"
+            "# {{skill_name}}\n\n"
+            "## 1. Purpose\n\n## 2. Required Inputs\n\n## 3. Expected Outputs\n\n"
+            "## 4. Execution Boundaries & Safety\n\n## 5. Fallback Mechanism\n"
+        )
+        print(f"Created {skill_template}")
+        
+    persona_template = agent_dir / "persona_template.md"
+    if not persona_template.exists():
+        persona_template.write_text(
+            "# PAP Persona Definition Template\n\n"
+            "## 1. Core Identity & Tone\n\n## 2. Prime Directives\n\n"
+            "## 3. Avoidance Rules\n\n## 4. Default Workflow\n"
+        )
+        print(f"Created {persona_template}")
+    
+    print("PAP workspace scaffolded successfully!")
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.command and args.command[0] == "init":
+        scaffold_workspace(Path.cwd())
+        return 0
+        
+    if args.command and args.command[0] == "mcp" and len(args.command) > 1 and args.command[1] == "sync":
+        config_path = Path(args.config)
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        config = load_agent_config(config_path)
+        
+        from agent_runtime.mcp_bridge import sync_mcp_servers
+        root_path = Path.cwd()
+        if config_path.parent.name == ".agent":
+            root_path = config_path.parent.parent
+            
+        print("Synchronizing MCP servers...")
+        sync_mcp_servers(config, root_path)
+        print("Done!")
+        return 0
 
     config_path = Path(args.config)
     if not config_path.exists():
