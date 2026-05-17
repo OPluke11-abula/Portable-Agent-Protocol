@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="portable-agent",
-        description="Portable Agent Protocol — reference CLI",
+        description="Portable Agent Protocol reference CLI",
     )
     parser.add_argument(
         "--config",

@@ -50,6 +50,7 @@ The current Python reference runtime reads the YAML front matter above.
 
 - Route natural-language or structured requests to the right tool
 - Maintain local memory state for context persistence
+- Validate and discover the declared `.agent/` protocol layout
 - Load prompt snippets from `.agent/prompts.md`
 - Execute workflows defined in `.agent/workflows.md`
 

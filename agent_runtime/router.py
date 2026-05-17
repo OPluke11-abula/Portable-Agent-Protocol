@@ -1,4 +1,4 @@
-"""Router — discovers tool modules and dispatches requests."""
+"""Router that discovers tool modules and dispatches requests."""
 
 from __future__ import annotations
 

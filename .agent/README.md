@@ -6,8 +6,8 @@ the richer protocol templates can coexist without ambiguity.
 ## Layer 1: Executable manifest
 
 - `.agent/agent.md` is the executable manifest.
-- The current Python reference runtime only parses the YAML front matter in this
-  file.
+- The current Python reference runtime parses the YAML front matter in this file
+  and discovers the declared protocol layout.
 - Runtime paths and top-level layout declarations must stay accurate here.
 
 ## Layer 2: Runtime entry documents

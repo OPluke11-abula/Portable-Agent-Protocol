@@ -130,6 +130,73 @@ def validate_agent_config_paths(
             )
 
 
+def _iter_markdown_documents(directory: Path) -> list[Path]:
+    """Return direct Markdown documents in a declared protocol directory."""
+    if not directory.exists() or not directory.is_dir():
+        return []
+    return sorted(
+        path
+        for path in directory.iterdir()
+        if path.is_file() and path.suffix.lower() == ".md"
+    )
+
+
+def load_agent_layout(
+    config: dict[str, Any], agent_md: str | Path = ".agent/agent.md"
+) -> dict[str, Any]:
+    """Resolve the manifest-declared protocol layout.
+
+    The returned layout keeps the top-level entry documents and detailed
+    directory documents separate, matching the three-layer .agent contract.
+    """
+    config_path = Path(agent_md)
+    protocol = config.get("protocol")
+    if not isinstance(protocol, dict):
+        return {
+            "root": None,
+            "manifest": None,
+            "entrypoints": {},
+            "directories": {},
+            "directory_documents": {},
+        }
+
+    root = None
+    raw_root = protocol.get("root")
+    if isinstance(raw_root, str):
+        root = _resolve_declared_path(raw_root, config_path)
+
+    manifest = None
+    raw_manifest = protocol.get("manifest")
+    if isinstance(raw_manifest, str):
+        manifest = _resolve_declared_path(raw_manifest, config_path)
+
+    entrypoints: dict[str, Path] = {}
+    raw_entrypoints = protocol.get("entrypoints")
+    if isinstance(raw_entrypoints, dict):
+        for name, raw_path in raw_entrypoints.items():
+            if isinstance(raw_path, str):
+                entrypoints[name] = _resolve_declared_path(raw_path, config_path)
+
+    directories: dict[str, Path] = {}
+    directory_documents: dict[str, list[Path]] = {}
+    raw_directories = protocol.get("directories")
+    if isinstance(raw_directories, dict):
+        for name, raw_path in raw_directories.items():
+            if not isinstance(raw_path, str):
+                continue
+            directory = _resolve_declared_path(raw_path, config_path)
+            directories[name] = directory
+            directory_documents[name] = _iter_markdown_documents(directory)
+
+    return {
+        "root": root,
+        "manifest": manifest,
+        "entrypoints": entrypoints,
+        "directories": directories,
+        "directory_documents": directory_documents,
+    }
+
+
 class AgentEngine:
     """Bootstraps the agent runtime from the protocol config."""
 
@@ -137,6 +204,7 @@ class AgentEngine:
         self.config_path = Path(config_path)
         self.config = load_agent_config(self.config_path)
         validate_agent_config_paths(self.config, self.config_path)
+        self.layout = load_agent_layout(self.config, self.config_path)
         self.router = Router(tools=self.config.get("tools", []))
         logger.info(
             "AgentEngine initialised - name=%s version=%s tools=%s",
