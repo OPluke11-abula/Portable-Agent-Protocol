@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# FPAP additions
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.agent/runtime/
+.agent/logs/
+.agent/memory/vector_store/
+.agent/memory/chroma/
