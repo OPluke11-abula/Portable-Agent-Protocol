@@ -5,6 +5,8 @@
   "description": "JSON Schema for validating the YAML front-matter of .agent/agent.md",
   "type": "object",
   "required": [
+    "protocol_version",
+    "min_runtime_version",
     "name",
     "version",
     "purpose",
@@ -14,6 +16,17 @@
     "tools"
   ],
   "properties": {
+    "protocol_version": {
+      "type": "string",
+      "description": "The version of the Portable Agent Protocol schema.",
+      "pattern": "^v?\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0"
+    },
+    "min_runtime_version": {
+      "type": "string",
+      "description": "The minimum agent runtime version required.",
+      "default": "0.1.0"
+    },
     "name": {
       "type": "string",
       "description": "The unique name of this agent workspace.",

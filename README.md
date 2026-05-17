@@ -209,6 +209,14 @@ Show the parsed manifest config:
 python cli.py --show-config
 ```
 
+Validate the `.agent/` workspace against the schema:
+
+驗證 `.agent/` 工作區是否符合 Schema：
+
+```text
+python cli.py validate
+```
+
 Start the runtime with the default manifest:
 
 用預設 manifest 啟動 runtime：

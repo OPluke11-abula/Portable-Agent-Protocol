@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+try:
+    import jsonschema
+except ImportError:
+    jsonschema = None
 
 from .logger import get_logger
 from .router import Router
@@ -87,6 +93,36 @@ def _iter_declared_paths(config: dict[str, Any]) -> list[tuple[str, str]]:
                 declared.append((f"protocol.{group_name}.{name}", value))
 
     return declared
+
+
+def validate_agent_schema(config: dict[str, Any], config_path: Path) -> None:
+    """Validate the agent config against the JSON schema."""
+    if jsonschema is None:
+        logger.warning("jsonschema is not installed. Schema validation skipped.")
+        return
+        
+    project_root = _project_root_from_config(config_path)
+    schema_path = project_root / "schemas" / "agent-schema.json"
+    if not schema_path.exists():
+        logger.warning("agent-schema.json not found at %s. Schema validation skipped.", schema_path)
+        return
+        
+    try:
+        with schema_path.open(encoding="utf-8") as f:
+            schema = json.load(f)
+        jsonschema.validate(instance=config, schema=schema)
+    except jsonschema.exceptions.ValidationError as e:
+        raise ValueError(f"Schema validation failed: {e.message}") from e
+    except json.JSONDecodeError as e:
+        logger.error("Failed to parse agent-schema.json: %s", e)
+
+
+def validate_agent_workspace(config_path: str | Path = ".agent/agent.md") -> None:
+    """Validate the agent workspace schema and paths."""
+    config_path = Path(config_path)
+    config = load_agent_config(config_path)
+    validate_agent_schema(config, config_path)
+    validate_agent_config_paths(config, config_path)
 
 
 def validate_agent_config_paths(
@@ -203,6 +239,7 @@ class AgentEngine:
     def __init__(self, config_path: str | Path = ".agent/agent.md") -> None:
         self.config_path = Path(config_path)
         self.config = load_agent_config(self.config_path)
+        validate_agent_schema(self.config, self.config_path)
         validate_agent_config_paths(self.config, self.config_path)
         self.layout = load_agent_layout(self.config, self.config_path)
         self.router = Router(

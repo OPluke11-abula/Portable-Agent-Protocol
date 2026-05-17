@@ -3,10 +3,8 @@
 Usage
 -----
     python cli.py init                   # scaffold a new .agent/ workspace
+    python cli.py validate               # validate the .agent/ workspace
     python cli.py mcp sync               # sync MCP server tools to .agent/skills/
-    python cli.py                        # uses default .agent/agent.md
-    python cli.py --config path/to/agent.md
-    python cli.py --tool search_web --params '{"query": "hello world"}'
 """
 
 from __future__ import annotations
@@ -30,7 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "command",
         nargs="*",
-        help="Command to run (e.g. 'init' or 'mcp sync')",
+        help="Command to run (e.g. 'init', 'validate', or 'mcp sync')",
     )
     parser.add_argument(
         "--config",
@@ -69,6 +67,8 @@ def scaffold_workspace(base_dir: Path) -> None:
     if not agent_md.exists():
         agent_md.write_text(
             "---\n"
+            "protocol_version: \"1.0.0\"\n"
+            "min_runtime_version: \"0.1.0\"\n"
             "name: new-agent\n"
             "version: 0.1.0\n"
             "purpose: Define the core purpose of this agent here.\n"
@@ -111,6 +111,19 @@ def main(argv: list[str] | None = None) -> int:
         scaffold_workspace(Path.cwd())
         return 0
         
+    if args.command and args.command[0] == "validate":
+        from agent_runtime.engine import validate_agent_workspace
+        config_path = Path(args.config)
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        try:
+            validate_agent_workspace(config_path)
+            print(f"Success: {config_path} passes all schema and layout validations.")
+            return 0
+        except Exception as e:
+            print(f"Validation failed: {e}", file=sys.stderr)
+            return 1
     if args.command and args.command[0] == "mcp" and len(args.command) > 1 and args.command[1] == "sync":
         config_path = Path(args.config)
         if not config_path.exists():

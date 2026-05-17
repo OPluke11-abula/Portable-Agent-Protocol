@@ -1,6 +1,12 @@
 ---
 name: portable-agent
 version: "0.1.0"
+protocol_version: "1.0.0"
+min_runtime_version: "0.1.0"
+purpose: Reference implementation of the Portable Agent Protocol.
+language: en-US
+authorization_level: interactive-approval
+use_case_tags: [protocol, reference]
 description: >
   Reference implementation of the Portable Agent Protocol -
   a minimal, portable runtime for AI collaboration, skills, memory,
