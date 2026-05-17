@@ -246,11 +246,21 @@ class AgentEngine:
             tools=self.config.get("tools", []), 
             mcp_servers=self.config.get("mcp_servers", {})
         )
+
+        # -- Memory backend --------------------------------------------------
+        from .memory import create_memory_backend
+
+        mem_cfg = self.config.get("memory", {})
+        backend_name = mem_cfg.get("backend", "local") if isinstance(mem_cfg, dict) else "local"
+        mem_path = mem_cfg.get("path") if isinstance(mem_cfg, dict) else None
+        self.memory = create_memory_backend(backend_name, path=mem_path)
+
         logger.info(
-            "AgentEngine initialised - name=%s version=%s tools=%s",
+            "AgentEngine initialised - name=%s version=%s tools=%s memory=%s",
             self.config.get("name"),
             self.config.get("version"),
             self.config.get("tools"),
+            type(self.memory).__name__,
         )
 
     # ------------------------------------------------------------------

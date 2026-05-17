@@ -99,7 +99,12 @@
     "memory": {
       "type": "object",
       "properties": {
-        "backend": { "type": "string", "default": "local" },
+        "backend": {
+          "type": "string",
+          "description": "Memory persistence backend: in_memory (ephemeral), local/json (JSON file), sqlite (SQLite DB), vector (VectorDB placeholder).",
+          "enum": ["in_memory", "local", "json", "sqlite", "vector"],
+          "default": "local"
+        },
         "path": { "type": "string", "default": ".agent/memory/" }
       }
     },

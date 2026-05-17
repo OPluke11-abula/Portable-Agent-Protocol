@@ -7,13 +7,63 @@ Strategy notes for short-term and long-term memory live under `.agent/memory/`.
 
 ## Overview
 
-The agent persists context between invocations using a local JSON store located
-at `.agent/memory/`. Each key maps to a JSON file:
+The agent persists context between invocations using a pluggable **Memory
+Backend** system.  The `backend` field in `agent.md` selects which
+implementation to use at runtime.
 
-```text
-.agent/memory/
-  context.json      current session context
-  history.json      ordered list of past interactions
+```yaml
+# in agent.md front matter
+memory:
+  backend: local        # or: in_memory, sqlite, vector
+  path: .agent/memory/
+```
+
+---
+
+## Backends
+
+| Backend     | Class              | Description                                      |
+| ----------- | ------------------ | ------------------------------------------------ |
+| `in_memory` | `InMemoryBackend`  | Ephemeral dict store, zero dependencies.  Data lost on exit. |
+| `local`     | `JSONFileBackend`  | JSON file persistence at `memory.json` (default). |
+| `json`      | `JSONFileBackend`  | Alias for `local`.                               |
+| `sqlite`    | `SQLiteBackend`    | SQLite database for durable local persistence.   |
+| `vector`    | `VectorDBBackend`  | Placeholder for semantic search (Qdrant / Chroma). |
+
+### API Contract
+
+Every backend implements the `MemoryBackend` abstract class:
+
+```python
+class MemoryBackend(ABC):
+    def read(self, key: str) -> Any: ...
+    def write(self, key: str, value: Any) -> None: ...
+    def delete(self, key: str) -> bool: ...
+    def list_keys(self) -> list[str]: ...
+    def search(self, query: str, top_k: int = 5) -> list[dict]: ...
+    def clear(self) -> None: ...
+```
+
+### Usage Example
+
+```python
+from agent_runtime.memory import create_memory_backend
+
+# Factory-based creation
+backend = create_memory_backend("sqlite", path=".agent/memory/memory.db")
+backend.write("user_name", "Alice")
+print(backend.read("user_name"))   # "Alice"
+print(backend.search("ali"))       # [{"key": "user_name", "value": "Alice"}]
+```
+
+Or via the `AgentEngine`:
+
+```python
+from agent_runtime import AgentEngine
+
+engine = AgentEngine(".agent/agent.md")
+engine.memory.write("session_id", "abc-123")
+print(engine.memory.read("session_id"))
 ```
 
 ---
@@ -45,18 +95,6 @@ at `.agent/memory/`. Each key maps to a JSON file:
   }
 ]
 ```
-
----
-
-## Backends
-
-The `backend` field in `agent.md` controls the persistence layer.
-
-| Backend | Description |
-| --- | --- |
-| `local` | Plain JSON files (default) |
-| `sqlite` | SQLite database (planned) |
-| `redis` | Redis key-value store (planned) |
 
 ---
 

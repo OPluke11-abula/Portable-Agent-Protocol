@@ -40,6 +40,14 @@ PAP comes with an official VS Code extension (`vscode-extension/`) that provides
 - **IntelliSense**: Real-time YAML schema validation and auto-complete for `agent.md`.
 - **UI Commands**: 1-click workspace initialization (`PAP: Initialize Workspace`) and MCP sync (`PAP: Sync MCP Servers`).
 
+### 3. Pluggable Memory Backend
+The runtime ships with a pluggable memory abstraction (`agent_runtime/memory.py`):
+- **InMemoryBackend**: Zero-dependency ephemeral store for dev/testing.
+- **JSONFileBackend**: Lightweight JSON file persistence (default).
+- **SQLiteBackend**: Durable local persistence via SQLite.
+- **VectorDBBackend**: Placeholder for semantic search (Qdrant / Chroma).
+- **Factory**: `create_memory_backend("sqlite")` — one-line backend switching.
+
 ### 1. MCP 雙向橋接 (Model Context Protocol)
 Python runtime 內建了 `pap-mcp-bridge`，無縫銜接外部 MCP 伺服器：
 - **同步 (Sync)**：執行 `python cli.py mcp sync` 自動將 MCP 的 JSON Schema 轉譯為標準的 Markdown 工具合約 (`.agent/skills/*.md`)。
@@ -49,6 +57,14 @@ Python runtime 內建了 `pap-mcp-bridge`，無縫銜接外部 MCP 伺服器：
 PAP 提供了專屬的 VS Code 擴充套件 (`vscode-extension/`)：
 - **智慧提示 (IntelliSense)**：為 `agent.md` 提供即時的 YAML Schema 驗證與自動完成提示。
 - **UI 捷徑**：提供一鍵生成工作區 (`PAP: Initialize Workspace`) 與同步 MCP (`PAP: Sync MCP Servers`) 功能。
+
+### 3. 可插拔記憶體後端 (Pluggable Memory Backend)
+Runtime 內建了可插拔的記憶體抽象層 (`agent_runtime/memory.py`)：
+- **InMemoryBackend**：零依賴的臨時記憶體，適合開發測試。
+- **JSONFileBackend**：輕量 JSON 檔案持久化（預設）。
+- **SQLiteBackend**：透過 SQLite 實現持久化本地儲存。
+- **VectorDBBackend**：語義搜尋預留介面（Qdrant / Chroma）。
+- **工廠函式**：`create_memory_backend("sqlite")` — 一行切換後端。
 
 ## Architecture / 架構
 
