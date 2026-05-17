@@ -11,6 +11,9 @@ reference runtime。它的目標是讓專案能用穩定的工作區契約，讓
 
 ## Project Scope / 專案定位
 
+> 📖 **Read the Whitepaper:** Learn more about the core philosophy and architecture in our [Technical Whitepaper](docs/WHITEPAPER.md).
+> 📖 **閱讀技術白皮書：** 深入了解我們的核心哲學與架構，請參閱[技術白皮書](docs/WHITEPAPER.md)。
+
 This repository is not only a documentation template, and it is not only a
 Python runtime. It combines both parts:
 
