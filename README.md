@@ -31,6 +31,12 @@ Python runtime. It combines both parts:
 - `examples/`：protocol writeback 與 runtime simulation 範例
 - `USAGE.md`：將 `.agent/` 複製到其他專案的使用說明
 
+### 4. Cross-Language Runtimes & Conformance
+PAP is language-agnostic. The project ships with:
+- `agent_runtime/`: The full-featured Python reference implementation.
+- `agent_runtime_ts/`: A lightweight TypeScript runtime for the JS/Node ecosystem.
+- `conformance/`: A language-agnostic YAML test suite that any PAP runtime must pass to be certified as "PAP-Compatible".
+
 ## 🌟 Key Features / 新增亮點
 
 ### 1. Model Context Protocol (MCP) Integration
