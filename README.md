@@ -37,6 +37,12 @@ PAP is language-agnostic. The project ships with:
 - `agent_runtime_ts/`: A lightweight TypeScript runtime for the JS/Node ecosystem.
 - `conformance/`: A language-agnostic YAML test suite that any PAP runtime must pass to be certified as "PAP-Compatible".
 
+### 5. PAP-Compatible Certification
+Build trust by displaying the **PAP-Compatible Badge** on your framework.
+- **Criteria:** Read the [Certification Rules](conformance/CERTIFICATION.md) to learn how to test your runtime.
+- **Official Integrations:** View our `examples/las-integration/` to see how the **Lightweight Agent System (LAS)** natively adopts PAP.
+[![PAP Compatible](https://img.shields.io/badge/PAP--Compatible-blue.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol)
+
 ## 🌟 Key Features / 新增亮點
 
 ### 1. Model Context Protocol (MCP) Integration
