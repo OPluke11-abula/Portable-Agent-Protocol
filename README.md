@@ -1,195 +1,180 @@
 # Portable-Agent-Protocol
 
-Portable-Agent-Protocol is a portable `.agent/` collaboration protocol plus a
-Python reference runtime. It is designed for projects that want AI agents to
-share a stable workspace contract for tools, prompts, memory, workflows, and
-long-lived project knowledge.
+Portable-Agent-Protocol (PAP) is a portable `.agent/` workspace protocol and a
+reference runtime for AI-assisted projects. It gives agents and humans a shared,
+versioned contract for tools, prompts, memory, workflows, project knowledge, and
+runtime layout.
 
-Portable-Agent-Protocol 是一個可攜式 `.agent/` 協作協定，加上一個 Python
-reference runtime。它的目標是讓專案能用穩定的工作區契約，讓 AI agents
-共同理解 tools、prompts、memory、workflows，以及長期專案知識。
+## English
 
-## Project Scope / 專案定位
+### Current Status
 
-> 📖 **Read the Whitepaper:** Learn more about the core philosophy and architecture in our [Technical Whitepaper](docs/WHITEPAPER.md).
-> 📖 **閱讀技術白皮書：** 深入了解我們的核心哲學與架構，請參閱[技術白皮書](docs/WHITEPAPER.md)。
+This repository currently contains:
 
-This repository is not only a documentation template, and it is not only a
-Python runtime. It combines both parts:
+- A Python reference runtime in `agent_runtime/`.
+- A Python CLI entrypoint in `cli.py`.
+- A portable `.agent/` protocol workspace.
+- JSON Schema validation for `.agent/agent.md`.
+- Local tool routing for `search_web`, `query_db`, and `code_executor`.
+- MCP server sync and execution bridge support.
+- Pluggable memory backends: in-memory, JSON file, SQLite, and a vector backend placeholder.
+- Markdown-frontmatter workflow DAG execution.
+- A lightweight TypeScript runtime prototype in `agent_runtime_ts/`.
+- VS Code extension tooling in `vscode-extension/`.
+- Conformance and certification documents in `conformance/`.
 
-- `.agent/`: the protocol layer and portable collaboration workspace
-- `agent_runtime/`: the Python reference implementation for that protocol
-- `tests/`: regression tests that keep the protocol layout and runtime aligned
-- `examples/`: examples for protocol writeback and runtime simulation
-- `USAGE.md`: guidance for copying `.agent/` into another project
+The Python runtime is the primary implementation. The TypeScript runtime is a
+lightweight prototype and does not yet provide the full validation and workflow
+surface of the Python runtime.
 
-這個 repository 不是單純的文件模板，也不是單純的 Python runtime。它是兩者的整合：
-
-- `.agent/`：協定層與可攜式協作工作區
-- `agent_runtime/`：此協定的 Python reference implementation
-- `tests/`：確保協定 layout 與 runtime 維持一致的回歸測試
-- `examples/`：protocol writeback 與 runtime simulation 範例
-- `USAGE.md`：將 `.agent/` 複製到其他專案的使用說明
-
-### 4. Cross-Language Runtimes & Conformance
-PAP is language-agnostic. The project ships with:
-- `agent_runtime/`: The full-featured Python reference implementation.
-- `agent_runtime_ts/`: A lightweight TypeScript runtime for the JS/Node ecosystem.
-- `conformance/`: A language-agnostic YAML test suite that any PAP runtime must pass to be certified as "PAP-Compatible".
-
-### 5. PAP-Compatible Certification
-Build trust by displaying the **PAP-Compatible Badge** on your framework.
-- **Criteria:** Read the [Certification Rules](conformance/CERTIFICATION.md) to learn how to test your runtime.
-- **Official Integrations:** View our `examples/las-integration/` to see how the **Lightweight Agent System (LAS)** natively adopts PAP.
-[![PAP Compatible](https://img.shields.io/badge/PAP--Compatible-blue.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol)
-
-### 6. The `.agent/ Hub` Ecosystem
-Stop building agents from scratch. The Hub is a Git-backed public registry where you can discover, download, and share agent profiles.
-- **Clone an Agent:** `python cli.py hub clone username/agent-name`
-- **Publish an Agent:** `python cli.py hub pack` (Securely archives your workspace without leaking memory or secrets).
-- **Architecture:** Read the [Hub Specification](docs/HUB_SPEC.md).
-
-## 🌟 Key Features / 新增亮點
-
-### 1. Model Context Protocol (MCP) Integration
-The Python runtime includes `pap-mcp-bridge`, seamlessly connecting PAP with external MCP servers.
-- **Sync**: Run `python cli.py mcp sync` to dynamically generate Markdown contracts (`.agent/skills/*.md`) from MCP JSON Schemas.
-- **Execute**: The `AgentEngine` router dynamically forwards tool calls directly to the underlying MCP servers via stdio.
-
-### 2. VS Code Extension (Dev Tooling)
-PAP comes with an official VS Code extension (`vscode-extension/`) that provides:
-- **IntelliSense**: Real-time YAML schema validation and auto-complete for `agent.md`.
-- **UI Commands**: 1-click workspace initialization (`PAP: Initialize Workspace`) and MCP sync (`PAP: Sync MCP Servers`).
-
-### 3. Pluggable Memory Backend
-The runtime ships with a pluggable memory abstraction (`agent_runtime/memory.py`):
-- **InMemoryBackend**: Zero-dependency ephemeral store for dev/testing.
-- **JSONFileBackend**: Lightweight JSON file persistence (default).
-- **SQLiteBackend**: Durable local persistence via SQLite.
-- **VectorDBBackend**: Placeholder for semantic search (Qdrant / Chroma).
-- **Factory**: `create_memory_backend("sqlite")` — one-line backend switching.
-
-### 1. MCP 雙向橋接 (Model Context Protocol)
-Python runtime 內建了 `pap-mcp-bridge`，無縫銜接外部 MCP 伺服器：
-- **同步 (Sync)**：執行 `python cli.py mcp sync` 自動將 MCP 的 JSON Schema 轉譯為標準的 Markdown 工具合約 (`.agent/skills/*.md`)。
-- **動態執行 (Execute)**：`AgentEngine` 路由會自動攔截 MCP 工具呼叫，並透過 stdio 轉發給底層 MCP Server。
-
-### 2. VS Code 開發工具鏈
-PAP 提供了專屬的 VS Code 擴充套件 (`vscode-extension/`)：
-- **智慧提示 (IntelliSense)**：為 `agent.md` 提供即時的 YAML Schema 驗證與自動完成提示。
-- **UI 捷徑**：提供一鍵生成工作區 (`PAP: Initialize Workspace`) 與同步 MCP (`PAP: Sync MCP Servers`) 功能。
-
-### 3. 可插拔記憶體後端 (Pluggable Memory Backend)
-Runtime 內建了可插拔的記憶體抽象層 (`agent_runtime/memory.py`)：
-- **InMemoryBackend**：零依賴的臨時記憶體，適合開發測試。
-- **JSONFileBackend**：輕量 JSON 檔案持久化（預設）。
-- **SQLiteBackend**：透過 SQLite 實現持久化本地儲存。
-- **VectorDBBackend**：語義搜尋預留介面（Qdrant / Chroma）。
-- **工廠函式**：`create_memory_backend("sqlite")` — 一行切換後端。
-
-## Architecture / 架構
-
-The `.agent/` workspace has three layers.
-
-`.agent/` 工作區分為三層。
-
-### Layer 1: Manifest / 第一層：Manifest
-
-`.agent/agent.md` is the executable source of truth. The Python runtime reads
-the YAML front matter in this file to determine runtime configuration, enabled
-tools, and declared protocol paths.
-
-`.agent/agent.md` 是 executable source of truth。Python runtime 會讀取這個檔案
-的 YAML front matter，用來決定 runtime configuration、啟用的 tools，以及協定
-宣告的路徑。
-
-### Layer 2: Runtime Entry Documents / 第二層：Runtime Entry Documents
-
-The top-level `.agent/*.md` files are stable runtime-facing contracts and
-registries:
-
-- `.agent/skills.md`: skill registry and runtime module map
-- `.agent/prompts.md`: prompt catalog and reusable prompt snippets
-- `.agent/memory.md`: memory backend and persistence contract
-- `.agent/workflows.md`: workflow registry and expected workflow behavior
-
-頂層 `.agent/*.md` 檔案是 runtime-facing contracts 與 registries：
-
-- `.agent/skills.md`：skill registry 與 runtime module map
-- `.agent/prompts.md`：prompt catalog 與可重用 prompt snippets
-- `.agent/memory.md`：memory backend 與 persistence contract
-- `.agent/workflows.md`：workflow registry 與 workflow 行為契約
-
-### Layer 3: Detailed Directories / 第三層：詳細目錄
-
-Subdirectories provide deeper contracts, rationale, templates, and guidance:
-
-- `.agent/core/`: engine, router, and logger responsibilities
-- `.agent/skills/`: per-skill contracts and safety notes
-- `.agent/prompts/`: prompt-authoring and error-handling guidance
-- `.agent/memory/`: memory strategy notes
-- `.agent/workflows/`: per-workflow notes and usage guidance
-- `.agent/knowledge_base/`: durable project knowledge
-
-子目錄負責更細的 contracts、設計理由、templates 與 guidance：
-
-- `.agent/core/`：engine、router、logger 的責任定義
-- `.agent/skills/`：每個 skill 的 contract 與 safety notes
-- `.agent/prompts/`：prompt 撰寫與錯誤處理 guidance
-- `.agent/memory/`：memory strategy notes
-- `.agent/workflows/`：每個 workflow 的補充 note 與使用 guidance
-- `.agent/knowledge_base/`：長期穩定的專案知識
-
-## Repository Layout / Repository 結構
+### Repository Layout
 
 ```text
 .
-|-- .agent/
-|   |-- agent.md
-|   |-- README.md
-|   |-- skills.md
-|   |-- prompts.md
-|   |-- memory.md
-|   |-- workflows.md
-|   |-- core/
-|   |-- skills/
-|   |-- prompts/
-|   |-- memory/
-|   |-- workflows/
-|   `-- knowledge_base/
-|-- agent_runtime/
-|   |-- engine.py
-|   |-- router.py
-|   |-- logger.py
-|   `-- tools/
-|-- tests/
-|-- examples/
-|-- cli.py
-|-- pyproject.toml
-`-- USAGE.md
+|-- .agent/                 # Portable protocol workspace
+|   |-- agent.md            # Executable manifest and source of truth
+|   |-- README.md           # Protocol workspace overview
+|   |-- skills.md           # Skill registry
+|   |-- prompts.md          # Prompt registry
+|   |-- memory.md           # Memory contract
+|   |-- workflows.md        # Workflow registry
+|   |-- core/               # Runtime component contracts
+|   |-- skills/             # Per-tool skill contracts
+|   |-- prompts/            # Prompt guidance
+|   |-- memory/             # Memory strategy notes
+|   |-- workflows/          # Workflow DAG documents
+|   `-- knowledge_base/     # Durable project knowledge
+|-- agent_runtime/          # Python reference runtime
+|-- agent_runtime_ts/       # TypeScript prototype runtime
+|-- conformance/            # Compatibility and certification assets
+|-- docs/                   # Whitepaper, hub spec, and talks
+|-- examples/               # Runtime and integration examples
+|-- schemas/                # JSON Schema for agent manifests
+|-- tests/                  # Python test suite
+|-- vscode-extension/       # VS Code extension source
+|-- cli.py                  # CLI entrypoint
+|-- pyproject.toml          # Python packaging and test config
+`-- USAGE.md                # Copying `.agent/` into another project
 ```
 
-## Runtime Behavior / Runtime 行為
+### Architecture
 
-The current Python reference runtime:
+PAP is organized around a three-layer `.agent/` contract:
 
-- parses `.agent/agent.md` YAML front matter
-- validates declared protocol paths
-- validates that each declared tool has a matching `.agent/skills/<tool>.md`
-  contract
-- discovers the declared `.agent/` layout and exposes it as
-  `AgentEngine.layout`
-- routes tool calls through `agent_runtime.router.Router`
+1. Manifest layer: `.agent/agent.md` is the executable source of truth. The
+   runtime reads its YAML front matter to load protocol version, runtime version,
+   tools, MCP servers, memory settings, and declared paths.
+2. Entry document layer: top-level `.agent/*.md` files are stable runtime-facing
+   registries and contracts for skills, prompts, memory, and workflows.
+3. Detail directory layer: `.agent/*/` directories provide deeper contracts,
+   rationale, templates, and long-lived project knowledge.
 
-目前 Python reference runtime 會：
+The Python runtime keeps this protocol and executable behavior aligned:
 
-- 解析 `.agent/agent.md` 的 YAML front matter
-- 驗證宣告的 protocol paths 是否存在
-- 驗證每個宣告 tool 是否都有對應的 `.agent/skills/<tool>.md` contract
-- discover 宣告的 `.agent/` layout，並透過 `AgentEngine.layout` 暴露給 runtime
-- 透過 `agent_runtime.router.Router` 路由 tool calls
+- `agent_runtime.engine.AgentEngine` loads the manifest, validates schema and
+  declared paths, discovers layout metadata, initializes memory, and owns the router.
+- `agent_runtime.router.Router` registers importable local tools and can route
+  configured MCP tool names.
+- `agent_runtime.memory` provides replaceable memory backends.
+- `agent_runtime.workflow.WorkflowExecutor` loads workflow DAGs from Markdown
+  front matter and executes steps in dependency order.
+- `agent_runtime.mcp_bridge` connects PAP skill contracts to MCP stdio servers.
 
-Example:
+### Installation
+
+Use Python 3.10 or newer.
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+```
+
+MSYS or Unix-style Python on Windows may create `.venv/bin/python.exe` instead:
+
+```powershell
+.\.venv\bin\python.exe -m pip install -e ".[dev]"
+```
+
+macOS or Linux:
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]"
+```
+
+### Validation and Tests
+
+Run the test suite:
+
+```bash
+python -m pytest
+```
+
+Run the built-in validator:
+
+```bash
+python cli.py validate
+```
+
+Run a compile check:
+
+```bash
+python -m compileall cli.py agent_runtime tests
+```
+
+### CLI Usage
+
+Initialize a `.agent/` workspace in the current directory:
+
+```bash
+python cli.py init
+```
+
+Show parsed manifest configuration:
+
+```bash
+python cli.py --show-config
+```
+
+Validate the current `.agent/` workspace:
+
+```bash
+python cli.py validate
+```
+
+Start the runtime:
+
+```bash
+python cli.py
+```
+
+Invoke a local tool:
+
+```bash
+python cli.py --tool search_web --params "{\"query\":\"portable agents\",\"limit\":3}"
+```
+
+Sync MCP server tools into `.agent/skills/` contracts:
+
+```bash
+python cli.py mcp sync
+```
+
+Pack the local `.agent/` profile for sharing:
+
+```bash
+python cli.py hub pack
+```
+
+Clone a public profile that contains a `.agent/` directory:
+
+```bash
+python cli.py hub clone owner/repository
+```
+
+### Runtime Example
 
 ```python
 from agent_runtime import AgentEngine
@@ -198,212 +183,339 @@ engine = AgentEngine(".agent/agent.md")
 print(engine.config["name"])
 print(engine.layout["entrypoints"])
 print(engine.router.available_tools)
+
+result = engine.run("search_web", {"query": "Portable Agent Protocol"})
+print(result)
 ```
 
-## Installation / 安裝
+### Workflow Example
 
-Use Python 3.10 or newer.
+Workflow files live under `.agent/workflows/` and store executable DAG metadata
+in YAML front matter.
 
-請使用 Python 3.10 或更新版本。
+```python
+from agent_runtime import AgentEngine
+
+engine = AgentEngine(".agent/agent.md")
+context = engine.execute_workflow("run_and_explain", {"code": "print('hello')"})
+print(context)
+```
+
+### MCP Integration
+
+MCP servers are declared in `.agent/agent.md` under `mcp_servers`.
+
+- `python cli.py mcp sync` connects to configured servers and generates Markdown
+  skill contracts in `.agent/skills/`.
+- Runtime calls using the `mcp_<server>_<tool>` naming convention are forwarded
+  to the matching MCP stdio server.
+
+### Memory Backends
+
+`agent_runtime.memory.create_memory_backend()` supports:
+
+- `in_memory`: process-local ephemeral memory.
+- `local` or `json`: JSON file persistence.
+- `sqlite`: SQLite persistence.
+- `vector`: placeholder backend for future semantic search integration.
+
+The JSON backend does not create `memory.json` until a write operation occurs.
+
+### VS Code Extension
+
+The VS Code extension source is in `vscode-extension/`. It contributes:
+
+- `PAP: Initialize Workspace`
+- `PAP: Sync MCP Servers`
+- YAML validation for `.agent/agent.md` through the published schema URL
+
+### Conformance
+
+The `conformance/` directory documents compatibility expectations for other
+runtimes:
+
+- `conformance/README.md`
+- `conformance/CERTIFICATION.md`
+- `conformance/layout-validation.yaml`
+- `conformance/schema-validation.yaml`
+
+### Source of Truth
+
+When files overlap, use this priority order:
+
+1. `.agent/agent.md` YAML front matter.
+2. Top-level `.agent/*.md` entry documents.
+3. Detailed `.agent/*/` directory documents.
+4. Runtime implementation in `agent_runtime/`.
+5. Repository-level docs such as this README and `USAGE.md`.
+
+### Maintenance Rules
+
+When adding a new local tool:
+
+1. Add the runtime module under `agent_runtime/tools/<tool_name>.py`.
+2. Add the skill contract under `.agent/skills/<tool_name>.md`.
+3. Add the tool name to `.agent/agent.md`.
+4. Add or update tests in `tests/`.
+5. Run `python cli.py validate` and `python -m pytest`.
+
+When changing protocol layout:
+
+1. Update `.agent/agent.md`.
+2. Update the matching `.agent/*.md` registry.
+3. Update detailed docs under `.agent/*/`.
+4. Update schema or conformance files if the change affects other runtimes.
+5. Update tests and README if behavior or usage changes.
+
+## 中文
+
+### 目前狀態
+
+這個 repository 目前包含：
+
+- `agent_runtime/`：Python 參考 runtime。
+- `cli.py`：Python CLI 入口。
+- `.agent/`：可攜式 agent 協作協定工作區。
+- `schemas/agent-schema.json`：用來驗證 `.agent/agent.md` 的 JSON Schema。
+- 本地工具路由：`search_web`、`query_db`、`code_executor`。
+- MCP server 同步與執行 bridge。
+- 可替換記憶體後端：in-memory、JSON file、SQLite、vector placeholder。
+- 以 Markdown front matter 定義的 workflow DAG 執行器。
+- `agent_runtime_ts/`：輕量 TypeScript runtime prototype。
+- `vscode-extension/`：VS Code extension tooling。
+- `conformance/`：相容性與認證文件。
+
+Python runtime 是目前主要且較完整的實作。TypeScript runtime 仍是輕量
+prototype，尚未提供 Python runtime 的完整驗證與 workflow 功能面。
+
+### Repository 結構
 
 ```text
+.
+|-- .agent/                 # 可攜式協定工作區
+|   |-- agent.md            # 可執行 manifest 與主要真相來源
+|   |-- README.md           # 協定工作區總覽
+|   |-- skills.md           # Skill registry
+|   |-- prompts.md          # Prompt registry
+|   |-- memory.md           # Memory contract
+|   |-- workflows.md        # Workflow registry
+|   |-- core/               # Runtime 元件契約
+|   |-- skills/             # 各工具的 skill contract
+|   |-- prompts/            # Prompt 撰寫指引
+|   |-- memory/             # Memory 策略說明
+|   |-- workflows/          # Workflow DAG 文件
+|   `-- knowledge_base/     # 長期專案知識
+|-- agent_runtime/          # Python 參考 runtime
+|-- agent_runtime_ts/       # TypeScript prototype runtime
+|-- conformance/            # 相容性與認證資產
+|-- docs/                   # Whitepaper、Hub spec、talk 文件
+|-- examples/               # Runtime 與整合範例
+|-- schemas/                # Agent manifest JSON Schema
+|-- tests/                  # Python 測試
+|-- vscode-extension/       # VS Code extension 原始碼
+|-- cli.py                  # CLI 入口
+|-- pyproject.toml          # Python package 與測試設定
+`-- USAGE.md                # 如何複製 `.agent/` 到其他專案
+```
+
+### 架構
+
+PAP 使用三層 `.agent/` 契約：
+
+1. Manifest 層：`.agent/agent.md` 是可執行的主要真相來源。runtime 會讀取
+   YAML front matter，取得 protocol version、runtime version、工具、MCP
+   servers、memory 設定，以及宣告的路徑。
+2. Entry document 層：最上層的 `.agent/*.md` 是 runtime 會面對的穩定
+   registry 與 contract，包含 skills、prompts、memory、workflows。
+3. Detail directory 層：`.agent/*/` 目錄提供更細的契約、設計理由、模板與長期專案知識。
+
+Python runtime 的主要責任：
+
+- `agent_runtime.engine.AgentEngine`：讀取 manifest、驗證 schema 和宣告路徑、探索 layout、初始化 memory、持有 router。
+- `agent_runtime.router.Router`：註冊可 import 的本地工具，並可依設定路由 MCP 工具。
+- `agent_runtime.memory`：提供可替換的 memory backend。
+- `agent_runtime.workflow.WorkflowExecutor`：從 Markdown front matter 讀取 workflow DAG，依 dependency order 執行。
+- `agent_runtime.mcp_bridge`：把 PAP skill contract 與 MCP stdio server 串接起來。
+
+### 安裝
+
+需要 Python 3.10 或更新版本。
+
+Windows PowerShell：
+
+```powershell
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
-On macOS or Linux:
+如果 Windows 上使用 MSYS 或 Unix-style Python，venv 可能會建立在 `.venv/bin/python.exe`：
 
-```text
+```powershell
+.\.venv\bin\python.exe -m pip install -e ".[dev]"
+```
+
+macOS 或 Linux：
+
+```bash
 python -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]"
 ```
 
-## Testing / 測試
+### 驗證與測試
 
-Run the full test suite:
+執行完整 Python 測試：
 
-執行完整測試：
-
-```text
+```bash
 python -m pytest
 ```
 
-Run a compile check:
+執行內建 validator：
 
-執行 compile check：
-
-```text
-python -m compileall cli.py agent_runtime tests
-```
-
-## CLI Usage / CLI 使用
-
-Show the parsed manifest config:
-
-顯示解析後的 manifest config：
-
-```text
-python cli.py --show-config
-```
-
-Validate the `.agent/` workspace against the schema:
-
-驗證 `.agent/` 工作區是否符合 Schema：
-
-```text
+```bash
 python cli.py validate
 ```
 
-Start the runtime with the default manifest:
+執行 Python compile check：
 
-用預設 manifest 啟動 runtime：
+```bash
+python -m compileall cli.py agent_runtime tests
+```
 
-```text
+### CLI 使用方式
+
+在目前目錄建立 `.agent/` 工作區：
+
+```bash
+python cli.py init
+```
+
+顯示解析後的 manifest 設定：
+
+```bash
+python cli.py --show-config
+```
+
+驗證目前 `.agent/` 工作區：
+
+```bash
+python cli.py validate
+```
+
+啟動 runtime：
+
+```bash
 python cli.py
 ```
 
-Invoke a tool:
+呼叫本地工具：
 
-呼叫 tool：
-
-```text
-python cli.py --tool search_web --params "{\"query\":\"portable agents\"}"
+```bash
+python cli.py --tool search_web --params "{\"query\":\"portable agents\",\"limit\":3}"
 ```
 
-## Protocol Evolution Rules / 協定演進規則
+將 MCP server 工具同步成 `.agent/skills/` contract：
 
-When adding or changing a capability, keep the protocol and runtime aligned.
-
-新增或修改 capability 時，必須同步維持 protocol 與 runtime 一致。
-
-- New runtime capability: update `.agent/agent.md`, `.agent/skills.md`,
-  `.agent/skills/<tool>.md`, runtime code, and tests.
-- New prompt policy: update `.agent/prompts.md` if it affects runtime-facing
-  behavior, and `.agent/prompts/` for detailed guidance.
-- New workflow: update `.agent/workflows.md` and add or update a document under
-  `.agent/workflows/`.
-- New memory behavior: update `.agent/memory.md` for runtime-facing contract
-  changes, and `.agent/memory/` for detailed strategy notes.
-- New durable project knowledge: update `.agent/knowledge_base/`.
-
-- 新 runtime capability：同步更新 `.agent/agent.md`、`.agent/skills.md`、
-  `.agent/skills/<tool>.md`、runtime code 與 tests。
-- 新 prompt policy：若影響 runtime-facing behavior，更新 `.agent/prompts.md`；
-  詳細 guidance 則更新 `.agent/prompts/`。
-- 新 workflow：更新 `.agent/workflows.md`，並在 `.agent/workflows/` 新增或更新文件。
-- 新 memory behavior：runtime-facing contract 更新 `.agent/memory.md`；詳細策略更新
-  `.agent/memory/`。
-- 新長期專案知識：更新 `.agent/knowledge_base/`。
-
-## Source of Truth / Source of Truth
-
-Use this priority order when documents overlap:
-
-當文件內容重疊時，依照以下優先順序判斷：
-
-1. `.agent/agent.md`: executable runtime source of truth
-2. top-level `.agent/*.md`: runtime-facing contracts and registries
-3. `.agent/*/` directories: detailed guidance, rationale, templates, and notes
-4. `agent_runtime/`: Python reference implementation that must stay consistent
-   with the protocol contract
-
-## 🚀 Roadmap & Strategy / 戰略藍圖與路線圖
-
-### Project Status / 專案現況總結
-
-**Current Strengths / 現有強項:**
-- **Clear Three-Layer Architecture**: Manifest → Runtime Entry Documents → Detailed Directories. (三層架構設計清晰，職責明確)
-- **Protocol-First Design**: `.agent/agent.md` as Single Source of Truth. (協定優先，降低與特定 runtime 的耦合)
-- **Validation**: Layout Validation + Tool Contract verification. (確保協定文件與 runtime 代碼不脫節)
-- **Bilingual Support**: Friendly to local and international communities. (中英雙語，兼顧在地與國際推廣)
-- **Engineering Standardization**: pyproject.toml, pytest, CLI entrypoint. (工程標準化，易於維護)
-- **Unique Philosophy**: "Documentation as Protocol" - readable by both AI and humans. (設計哲學獨特：「文件即協定」)
-
-**Current Weaknesses / 現有弱點:**
-- **No Schema Versioning**: Lack of a formal versioning mechanism (semver). (協定格式缺乏正式版本號機制)
-- **Python-only Runtime**: Limits adoption in JS/TS communities. (目前只有 Python runtime)
-- **Declarative Memory**: Lacks an executable persistence backend. (Memory contract 停留在聲明式，缺乏可執行的後端)
-- **Document-based Workflows**: Workflows are not executable DAGs. (Workflow 是文件描述而非可執行圖)
-- **Ambiguous Integrations**: Integration with LLM-Agent-System is not explicitly declared. (與 LLM-Agent-System 整合關係未明確)
-
-### Optimization Roadmap / 優化路線圖
-
-#### Phase 1: Protocol Maturation (0-3 Months) / 第一階段：協定成熟化（0–3 個月）
-1. **Schema Versioning / 協定版本化**: Add protocol versioning and semver rules to make PAP a trusted standard.
-2. **JSON Schema & CLI Validator**: Implement `pap validate` CLI to make the protocol machine-verifiable.
-3. **Memory Backend Abstractions / Memory Contract 實作化**: Implement replaceable memory backends (InMemory, SQLite, VectorDB).
-
-#### Phase 2: Ecosystem Building (3-6 Months) / 第二階段：生態建設（3–6 個月）
-4. **Workflow Execution Engine / Workflow 執行引擎**: Introduce DAG-driven workflow scheduling for true protocol-driven execution.
-5. **Cross-Language Runtime / 跨語言 Runtime 實作**: Build a TypeScript reference runtime and a Conformance Test Suite.
-6. **.agent/ Hub / 協定分享平台**: Launch a public platform to share Agent Profiles, skills, and prompts.
-
-#### Phase 3: Standardization (6-12 Months) / 第三階段：標準化競爭（6–12 個月）
-7. **Competitive Differentiation / 對標分析與差異化定位**: Position PAP clearly as the "AI-Native Workspace Protocol" compared to Anthropic MCP (tools) and Google A2A (communication).
-8. **Whitepaper & Community / 技術白皮書與社群佈局**: Publish a technical whitepaper and establish thought leadership.
-9. **Official LAS Integration / 正式整合 LLM-Agent-System**: Establish LAS as the official reference application.
-
-### Protocol Architecture Evolution / 協定架構演進圖
-
-```text
-Current (v0.x — Exploration)
-└── Markdown + YAML front matter | Python-only | Declarative memory | Document workflow
-
-↓ Phase 1
-
-v1.0 (Stability)
-└── Semver versioning | CLI validator | Memory Backend | PAP-LAS integration
-
-↓ Phase 2
-
-v1.x (Ecosystem)
-└── Workflow DAG | TypeScript Runtime | Conformance Test Suite
-
-↓ Phase 3
-
-v2.0 (Standardization)
-└── .agent/ Hub | Whitepaper | Multi-language runtimes | Community standard
+```bash
+python cli.py mcp sync
 ```
 
-```text
-現在（v0.x — 探索期）
-└── Markdown + YAML front matter | Python-only | 聲明式 memory | 文件式 workflow
+打包本地 `.agent/` profile：
 
-↓ 第一階段
-
-v1.0（協定穩定期）
-└── 版本化 semver | CLI validator | Memory Backend 實作 | PAP-LAS 整合宣告
-
-↓ 第二階段
-
-v1.x（生態建設期）
-└── Workflow DAG 執行 | TypeScript Runtime | Conformance Test Suite
-
-↓ 第三階段
-
-v2.0（標準競爭期）
-└── .agent/ Hub 上線 | 白皮書發布 | 多語言 runtime 生態 | 社群標準地位
+```bash
+python cli.py hub pack
 ```
 
-### Market Opportunity & Strategy / 市場機會與戰略定位
+複製包含 `.agent/` 的公開 profile：
 
-PAP occupies a unique "Protocol Layer" between foundation models and heavy application frameworks. Our strategic moats include:
-1. **First-Mover Advantage / 先發優勢**: Establishing mindshare for the `.agent/` workspace.
-2. **Network Effects / 網絡效應**: A growing ecosystem on the Hub increases value.
-3. **Standard Stickiness / 標準粘性**: High migration cost once adopted in production.
+```bash
+python cli.py hub clone owner/repository
+```
 
-PAP 佔據了「基礎模型 API」與「應用框架」之間的「協定層（Protocol Layer）」空白地帶，主要護城河包含先發優勢、生態網絡效應與標準粘性。
+### Runtime 範例
 
-### Top 3 Priorities / 最優先的三件事
+```python
+from agent_runtime import AgentEngine
 
-1. **Schema Versioning + CLI Validator / 實作協定版本化 + 發布 CLI validator**: The foundational requirement for community trust. (被社區嚴肅對待的最小門票)
-2. **Memory Backend Abstraction / 實作 Memory Backend 抽象層**: Transitioning memory from declarative to executable. (從「理念」變成「工具」的關鍵)
-3. **Whitepaper & Tech Talks / 發布技術白皮書並在社群演講**: Spreading the "Documentation as Protocol" philosophy. (傳播差異化哲學)
+engine = AgentEngine(".agent/agent.md")
+print(engine.config["name"])
+print(engine.layout["entrypoints"])
+print(engine.router.available_tools)
 
-## Status / 目前狀態
+result = engine.run("search_web", {"query": "Portable Agent Protocol"})
+print(result)
+```
 
-The repository currently includes a working Python reference runtime, layout
-validation, layout discovery, CLI entrypoint, tool router, and tests for the
-declared `.agent/` structure.
+### Workflow 範例
 
-目前的 repository 已包含可運作的 Python runtime、MCP 雙向橋接器 (pap-mcp-bridge)、以及 VS Code 擴充套件。我們成功將 PAP 推升為一個可被機器驗證、具備強大開發工具鏈的企業級標準。
+Workflow 文件放在 `.agent/workflows/`，可執行的 DAG metadata 放在 YAML front matter。
+
+```python
+from agent_runtime import AgentEngine
+
+engine = AgentEngine(".agent/agent.md")
+context = engine.execute_workflow("run_and_explain", {"code": "print('hello')"})
+print(context)
+```
+
+### MCP 整合
+
+MCP servers 在 `.agent/agent.md` 的 `mcp_servers` 宣告。
+
+- `python cli.py mcp sync` 會連到設定的 servers，並在 `.agent/skills/` 產生 Markdown skill contracts。
+- runtime 呼叫符合 `mcp_<server>_<tool>` 命名格式的工具時，會轉送到對應 MCP stdio server。
+
+### Memory Backends
+
+`agent_runtime.memory.create_memory_backend()` 支援：
+
+- `in_memory`：process-local 暫存記憶體。
+- `local` 或 `json`：JSON file persistence。
+- `sqlite`：SQLite persistence。
+- `vector`：未來 semantic search integration 的 placeholder。
+
+JSON backend 不會在初始化時建立 `memory.json`，第一次寫入時才會建立檔案。
+
+### VS Code Extension
+
+VS Code extension 原始碼位於 `vscode-extension/`，目前提供：
+
+- `PAP: Initialize Workspace`
+- `PAP: Sync MCP Servers`
+- 透過公開 schema URL 驗證 `.agent/agent.md`
+
+### Conformance
+
+`conformance/` 目錄記錄其他 runtime 的相容性期待：
+
+- `conformance/README.md`
+- `conformance/CERTIFICATION.md`
+- `conformance/layout-validation.yaml`
+- `conformance/schema-validation.yaml`
+
+### 真相來源順序
+
+當文件內容有重疊時，依照以下順序判斷：
+
+1. `.agent/agent.md` YAML front matter。
+2. 最上層 `.agent/*.md` entry documents。
+3. `.agent/*/` 詳細文件。
+4. `agent_runtime/` runtime 實作。
+5. Repository 層級文件，例如本 README 與 `USAGE.md`。
+
+### 維護規則
+
+新增本地工具時：
+
+1. 在 `agent_runtime/tools/<tool_name>.py` 新增 runtime module。
+2. 在 `.agent/skills/<tool_name>.md` 新增 skill contract。
+3. 在 `.agent/agent.md` 加入工具名稱。
+4. 在 `tests/` 新增或更新測試。
+5. 執行 `python cli.py validate` 與 `python -m pytest`。
+
+修改 protocol layout 時：
+
+1. 更新 `.agent/agent.md`。
+2. 更新對應的 `.agent/*.md` registry。
+3. 更新 `.agent/*/` 內的詳細文件。
+4. 如果會影響其他 runtime，更新 schema 或 conformance 文件。
+5. 如果行為或使用方式改變，更新測試與 README。

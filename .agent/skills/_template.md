@@ -9,29 +9,29 @@ author: "{{author_or_ai_generator}}"
 
 > **PAP Skill Contract**: This document defines the exact execution boundaries, inputs, and outputs for this skill. AI agents MUST strictly adhere to these specifications.
 
-## 1. Purpose (目的)
+## 1. Purpose
 <!-- AI Instruction: Describe exactly what this tool does and when to use it. -->
 {{purpose_description}}
 
-## 2. Required Inputs (輸入參數)
-<!-- AI Instruction: List all parameters using JSON Schema format conceptualization. Include type, requirement, and description. -->
+## 2. Required Inputs
+<!-- AI Instruction: List all parameters with type, requirement, and description. -->
 - `{{param_1_name}}` ({{type}}, **Required**): {{param_1_description}}
 - `{{param_2_name}}` ({{type}}, Optional): {{param_2_description}}
 
-## 3. Expected Outputs (預期輸出)
-<!-- AI Instruction: Describe the exact format of a successful return value. -->
+## 3. Expected Outputs
+<!-- AI Instruction: Describe the exact format of successful and failed return values. -->
 - **Success Format**: {{success_format_description}}
 - **Error Format**: {{error_format_description}}
 
-## 4. Execution Boundaries & Safety (執行邊界與安全)
-<!-- AI Instruction: What is this tool NOT allowed to do? Are there rate limits, destructive actions, or strict constraints? -->
+## 4. Execution Boundaries & Safety
+<!-- AI Instruction: State what this tool is not allowed to do, including rate limits, destructive actions, or strict constraints. -->
 > [!WARNING]
 > **Safety Constraints:**
 > - {{constraint_1}}
 > - {{constraint_2}}
 
-## 5. Fallback Mechanism (失敗回退機制)
-<!-- AI Instruction: If the tool fails, what should the agent do next? (e.g., retry with different parameters, use another tool, ask user) -->
+## 5. Fallback Mechanism
+<!-- AI Instruction: If the tool fails, state what the agent should do next. -->
 - **If {{error_condition_1}}**: {{fallback_action_1}}
 
 ---

@@ -131,11 +131,8 @@ class JSONFileBackend(MemoryBackend):
 
     def __init__(self, path: str | Path = ".agent/memory/") -> None:
         self._dir = Path(path)
-        self._dir.mkdir(parents=True, exist_ok=True)
         self._file = self._dir / "memory.json"
         self._lock = threading.Lock()
-        if not self._file.exists():
-            self._file.write_text("{}", encoding="utf-8")
         logger.info("JSONFileBackend initialised at %s", self._file)
 
     # -- internal helpers ---------------------------------------------------
@@ -147,6 +144,7 @@ class JSONFileBackend(MemoryBackend):
             return {}
 
     def _save(self, data: dict[str, Any]) -> None:
+        self._dir.mkdir(parents=True, exist_ok=True)
         self._file.write_text(
             json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
         )
@@ -164,6 +162,8 @@ class JSONFileBackend(MemoryBackend):
             self._save(data)
 
     def delete(self, key: str) -> bool:
+        if not self._file.exists():
+            return False
         with self._lock:
             data = self._load()
             existed = key in data
@@ -187,6 +187,8 @@ class JSONFileBackend(MemoryBackend):
         return results
 
     def clear(self) -> None:
+        if not self._file.exists():
+            return
         with self._lock:
             self._save({})
 

@@ -24,14 +24,7 @@ class Router:
         for name in tools or []:
             self._register(name)
             
-        # Register MCP tools if configured
         if mcp_servers:
-            from .mcp_bridge import execute_mcp_tool
-            for server_name, server_config in mcp_servers.items():
-                # We can't synchronously fetch tools at init without blocking, 
-                # so we rely on the manifest 'tools' list to map to MCP endpoints,
-                # OR we dynamically route any tool starting with mcp_{server_name}_
-                pass
             self._mcp_servers = mcp_servers
         else:
             self._mcp_servers = {}
@@ -50,6 +43,13 @@ class Router:
             logger.debug("Registered tool: %s", name)
         except ImportError as exc:
             logger.warning("Could not import tool '%s': %s", name, exc)
+
+    def register_tool(self, name: str, handler: Any) -> None:
+        """Register an in-process tool handler for tests or host applications."""
+        if not callable(handler):
+            raise TypeError("handler must be callable")
+        self._registry[name] = handler
+        logger.debug("Registered in-process tool: %s", name)
 
     # ------------------------------------------------------------------
     # Public API

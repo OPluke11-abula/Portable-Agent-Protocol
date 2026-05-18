@@ -30,8 +30,10 @@ export function activate(context: vscode.ExtensionContext) {
             if (!fs.existsSync(agentMd)) {
                 fs.writeFileSync(agentMd, 
 `---
+protocol_version: "1.0.0"
+min_runtime_version: "0.1.0"
 name: new-agent
-version: 0.1.0
+version: "0.1.0"
 purpose: Define the core purpose of this agent here.
 language: en-US
 authorization_level: interactive-approval
@@ -91,7 +93,7 @@ author: "{{author_or_ai_generator}}"
 1. {{directive_1}}
 
 ## 3. Avoidance Rules
-- ⛔ **DO NOT**: {{avoidance_1}}
+- **DO NOT**: {{avoidance_1}}
 
 ## 4. Default Workflow
 1. {{step_1}}

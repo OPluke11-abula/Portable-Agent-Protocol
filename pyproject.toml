@@ -23,5 +23,11 @@ dev = [
 [project.scripts]
 portable-agent = "cli:main"
 
+[tool.setuptools]
+py-modules = ["cli"]
+
+[tool.setuptools.packages.find]
+include = ["agent_runtime*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
