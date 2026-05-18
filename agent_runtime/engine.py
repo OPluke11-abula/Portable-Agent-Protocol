@@ -247,13 +247,41 @@ class AgentEngine:
             mcp_servers=self.config.get("mcp_servers", {})
         )
 
-        # -- Memory backend --------------------------------------------------
+        # -- Schema Evolution ------------------------------------------------
+        self.schema_evolution_config = self.config.get("schema_evolution", {})
+
+        # -- Memory backend(s) -----------------------------------------------
         from .memory import create_memory_backend
 
         mem_cfg = self.config.get("memory", {})
-        backend_name = mem_cfg.get("backend", "local") if isinstance(mem_cfg, dict) else "local"
-        mem_path = mem_cfg.get("path") if isinstance(mem_cfg, dict) else None
-        self.memory = create_memory_backend(backend_name, path=mem_path)
+        if not isinstance(mem_cfg, dict):
+            mem_cfg = {}
+        
+        mem_path = mem_cfg.get("path")
+        self.memory_tiers = {}
+        
+        # Support both legacy "backend" and new "tiers" schema
+        if "tiers" in mem_cfg and isinstance(mem_cfg["tiers"], dict):
+            for tier_name, backend_name in mem_cfg["tiers"].items():
+                tier_path = mem_path
+                if tier_path and backend_name == "sqlite":
+                    tier_path = Path(tier_path) / f"{tier_name}.db"
+                self.memory_tiers[tier_name] = create_memory_backend(backend_name, path=tier_path)
+            
+            # For backwards compatibility
+            if "persistent" in self.memory_tiers:
+                self.memory = self.memory_tiers["persistent"]
+            elif "session" in self.memory_tiers:
+                self.memory = self.memory_tiers["session"]
+            elif self.memory_tiers:
+                self.memory = next(iter(self.memory_tiers.values()))
+            else:
+                self.memory = create_memory_backend("local", path=mem_path)
+        else:
+            # Legacy fallback
+            backend_name = mem_cfg.get("backend", "local")
+            self.memory = create_memory_backend(backend_name, path=mem_path)
+            self.memory_tiers["persistent"] = self.memory
 
         logger.info(
             "AgentEngine initialised - name=%s version=%s tools=%s memory=%s",

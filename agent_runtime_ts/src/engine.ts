@@ -11,6 +11,20 @@ export interface AgentConfig {
   version?: string;
   tools?: string[];
   mcp_servers?: Record<string, any>;
+  schema_evolution?: {
+    allow_self_evolution?: boolean;
+    strict_forward_compatibility?: boolean;
+  };
+  memory?: {
+    tiers?: {
+      ephemeral?: string;
+      session?: string;
+      persistent?: string;
+      shared?: string;
+    };
+    path?: string;
+    backend?: string; // Legacy fallback
+  };
   [key: string]: any;
 }
 
@@ -25,6 +39,15 @@ export class AgentEngine {
     this.router = new Router(this.config.tools || [], this.config.mcp_servers || {});
     
     console.log(`[AgentEngine] Initialised - name=${this.config.name} version=${this.config.version}`);
+    
+    if (this.config.memory?.tiers) {
+      console.log(`[AgentEngine] Memory Tiers configured: ${JSON.stringify(this.config.memory.tiers)}`);
+    } else {
+      console.log(`[AgentEngine] Memory Backend configured: ${this.config.memory?.backend || 'local'}`);
+    }
+    if (this.config.schema_evolution?.strict_forward_compatibility) {
+      console.log(`[AgentEngine] Schema evolution is strictly constrained.`);
+    }
   }
 
   private loadConfig(filePath: string): AgentConfig {

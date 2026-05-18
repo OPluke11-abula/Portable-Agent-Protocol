@@ -73,6 +73,14 @@
         "type": "string"
       }
     },
+    "schema_evolution": {
+      "type": "object",
+      "description": "Rules governing how the agent can mutate its own configuration (e.g., skills, workflows) to ensure stability in a multi-agent environment.",
+      "properties": {
+        "allow_self_evolution": { "type": "boolean", "default": false },
+        "strict_forward_compatibility": { "type": "boolean", "description": "If true, skill mutations must be forward-compatible to prevent breaking dependent agents.", "default": true }
+      }
+    },
     "mcp_servers": {
       "type": "object",
       "description": "Optional: Model Context Protocol (MCP) servers to mount into this workspace.",
@@ -98,12 +106,17 @@
     },
     "memory": {
       "type": "object",
+      "description": "Memory architecture configuration, supporting tiered memory for formal execution semantics.",
       "properties": {
-        "backend": {
-          "type": "string",
-          "description": "Memory persistence backend: in_memory (ephemeral), local/json (JSON file), sqlite (SQLite DB), vector (VectorDB placeholder).",
-          "enum": ["in_memory", "local", "json", "sqlite", "vector"],
-          "default": "local"
+        "tiers": {
+          "type": "object",
+          "description": "Definition of memory tiers: ephemeral, session, persistent, and shared.",
+          "properties": {
+            "ephemeral": { "type": "string", "description": "Short-term, non-persisted memory.", "enum": ["in_memory", "none"], "default": "in_memory" },
+            "session": { "type": "string", "description": "Memory tied to the current execution session.", "enum": ["in_memory", "local", "redis"], "default": "in_memory" },
+            "persistent": { "type": "string", "description": "Long-term durable memory.", "enum": ["local", "json", "sqlite", "vector"], "default": "local" },
+            "shared": { "type": "string", "description": "Memory shared across multiple agents for handoff and broadcast.", "enum": ["none", "sqlite", "postgres", "redis"], "default": "none" }
+          }
         },
         "path": { "type": "string", "default": ".agent/memory/" }
       }

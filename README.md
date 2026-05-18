@@ -5,6 +5,10 @@
 
 *(For Traditional Chinese, please scroll down. / 中文說明請見下方)*
 
+**Imagine this:** You're in Cursor, and you ask Claude to architect a new Python library. The agent makes design decisions and saves them into the `.agent/` workspace. Three days later, you switch to VS Code and boot up a completely different agent. Because it opens the exact same `.agent/` workspace, it instantly knows *why* you chose `async` over `threading`—no re-explaining necessary.
+
+**That is the power of the Portable Agent Protocol.**
+
 The **Portable Agent Protocol (PAP)** is a standardized, framework-agnostic definition for AI agent workspaces. It separates the "Agent's Brain and Identity" from the "Runtime Execution Engine," allowing you to build an agent once and run it anywhere.
 
 By standardizing how prompts, tools, workflows, and memory are defined, PAP solves the vendor lock-in problem common in today's highly fragmented AI agent framework ecosystem.
@@ -19,14 +23,14 @@ PAP defines the `.agent/` directory as the universal manifest for any AI agent. 
 - `persona.md`: The agent's identity, tone, and core directives.
 - `skills/`: Standardized markdown definitions for external tools and APIs.
 - `workflows/`: Executable Directed Acyclic Graph (DAG) workflow definitions.
-- `memory.md`: Definitions for memory backends and persistence schemas.
+- `memory/`: A structured memory layout separating ephemeral, session, persistent, and shared states.
 
-### 2. Built-in MCP (Model Context Protocol) Bridge
-PAP natively supports Anthropic's **Model Context Protocol (MCP)**.
-Using the CLI (`pap mcp sync`), PAP can automatically discover tools from any MCP server and generate local markdown skill contracts inside the `.agent/skills/` directory.
+### 2. 🌟 Phase 1 Flagship: Built-in MCP (Model Context Protocol) Bridge
+**PAP and MCP are not competitors; they are perfectly orthogonal.** While MCP defines *how an agent calls a tool*, PAP defines *how an agent's state is ported*.
+Using the CLI (`pap mcp sync`), PAP can automatically discover tools from any external MCP server and generate local markdown skill contracts inside the `.agent/skills/` directory. This makes your agent instantly capable while keeping its state fully portable.
 
-### 3. Pluggable Memory Backends
-The reference runtime ships with a fully pluggable memory interface. Switch between `InMemory`, `JSONFile`, `SQLite`, or semantic `VectorDB` backends simply by changing the `memory.backend` string in your `agent.md`.
+### 3. Pluggable Tiered Memory (with Pessimistic Locking)
+The reference runtime ships with a fully pluggable, tiered memory interface. Configure `ephemeral`, `session`, `persistent`, and `shared` tiers in `agent.md` via the `memory.tiers` object. Switch between `in_memory`, `json`, `sqlite`, or semantic `vector` backends per tier. Local file backends now feature built-in pessimistic locking to safely support multi-agent concurrent writes.
 
 ### 4. Cross-Language Runtimes
 PAP is not restricted to Python. This repository provides:
@@ -90,6 +94,10 @@ To get certified, your runtime must:
 [![PAP Compatible](https://img.shields.io/badge/PAP--Compatible-blue.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)]()
 
+**想像一下這個場景：** 你在 Cursor 裡面讓 Claude 幫你設計了一個 Python 函式庫的架構，Agent 將決策過程寫進了 `.agent/` 工作區。三天後你換到 VS Code，啟動了另一個全新的 Agent，但因為它打開的是同一個 `.agent/`，它立刻知道上次決定用 `async` 而不是 `threading` 的原因，完全不需要重新解釋。
+
+**這就是 Portable Agent Protocol 的威力。**
+
 **Portable Agent Protocol (PAP)** 是一個標準化、與框架無關的 AI Agent 工作區定義協定。它將「Agent 的大腦與身份」與「底層執行引擎」徹底解耦，讓您只需打造一次 Agent，即可在任何框架或平台上執行。
 
 透過標準化提示詞 (Prompts)、工具 (Tools)、工作流 (Workflows) 與記憶體 (Memory) 的定義方式，PAP 解決了當今 AI Agent 框架生態系中嚴重的「供應商鎖定 (Vendor Lock-in)」問題。
@@ -103,15 +111,15 @@ PAP 將 `.agent/` 目錄定義為所有 AI Agent 的通用配置檔，內部包�
 - `agent.md`：核心設定檔與 YAML Manifest。
 - `persona.md`：定義 Agent 的人格、語氣與核心原則。
 - `skills/`：以 Markdown 定義的外部工具與 API 合約。
-- `workflows/`：可執行的 DAG (有向無環圖) 工作流定義。
-- `memory.md`：記憶體後端與持久化架構的定義。
+- `workflows/`: 可執行的 DAG (有向無環圖) 工作流定義。
+- `memory/`: 記憶體結構配置，區分短期 (ephemeral)、工作階段 (session)、持久 (persistent) 與共享 (shared) 狀態。
 
-### 2. 原生支援 MCP (Model Context Protocol) 橋接
-PAP 原生支援 Anthropic 提出的 **Model Context Protocol (MCP)**。
-透過 CLI (`pap mcp sync`)，PAP 能夠自動連線到任何 MCP Server，探索其提供的工具，並在 `.agent/skills/` 中自動生成對應的 Markdown 技能合約。
+### 2. 🌟 Phase 1 旗艦功能：原生支援 MCP (Model Context Protocol) 橋接
+**PAP 和 MCP 是完全正交且互補的。** MCP 解決的是「Agent 怎麼呼叫工具」，而 PAP 解決的是「Agent 的工作狀態怎麼移植」。
+透過 CLI (`pap mcp sync`)，PAP 能夠自動連線到任何外部的 MCP Server，探索其提供的工具，並在 `.agent/skills/` 中自動生成對應的 Markdown 技能合約。這讓您的 Agent 能立刻獲得強大能力，同時保持狀態的完全可攜。
 
-### 3. 可插拔記憶體架構 (Pluggable Memory)
-官方 Runtime 內建了完整的抽象記憶體介面。開發者只需在 `agent.md` 中修改 `memory.backend` 的字串，即可一鍵切換 `InMemory` (記憶體內)、`JSONFile` (JSON 檔案)、`SQLite` (資料庫) 甚至語義檢索的 `VectorDB`。
+### 3. 分層記憶體與悲觀鎖定 (Tiered Memory & Locking)
+官方 Runtime 內建了完整的分層記憶體介面。開發者可在 `agent.md` 中透過 `memory.tiers` 針對 `ephemeral` (短期)、`session` (會話)、`persistent` (持久) 與 `shared` (共享) 個別配置後端。同時，檔案型後端已內建跨行程悲觀鎖定 (Pessimistic Locking)，確保多 Agent 並發寫入時的資料安全。
 
 ### 4. 跨語言執行環境 (Cross-Language Runtimes)
 PAP 並不侷限於 Python，本專案同時提供：

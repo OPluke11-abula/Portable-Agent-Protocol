@@ -26,3 +26,28 @@ tests:
         use_case_tags: ["test"]
         ---
     expected_behavior: "reject_with_error"
+
+  - name: "Accept valid memory tiers and schema evolution"
+    input:
+      agent.md: |
+        ---
+        protocol_version: "1.0.0"
+        min_runtime_version: "0.1.0"
+        name: "AdvancedAgent"
+        version: "1.0"
+        purpose: "Testing Memory"
+        language: "en"
+        authorization_level: "autonomous"
+        use_case_tags: ["test"]
+        tools: ["search"]
+        schema_evolution:
+          allow_self_evolution: true
+          strict_forward_compatibility: true
+        memory:
+          tiers:
+            ephemeral: "in_memory"
+            session: "redis"
+            persistent: "sqlite"
+            shared: "postgres"
+        ---
+    expected_behavior: "accept"

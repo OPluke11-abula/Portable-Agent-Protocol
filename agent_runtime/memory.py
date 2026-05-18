@@ -31,6 +31,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from filelock import FileLock
+
 from .logger import get_logger
 
 logger = get_logger(__name__)
@@ -132,7 +134,10 @@ class JSONFileBackend(MemoryBackend):
     def __init__(self, path: str | Path = ".agent/memory/") -> None:
         self._dir = Path(path)
         self._file = self._dir / "memory.json"
-        self._lock = threading.Lock()
+        
+        # Ensure directory exists before creating lock
+        self._dir.mkdir(parents=True, exist_ok=True)
+        self._lock = FileLock(str(self._file) + ".lock", timeout=5.0)
         logger.info("JSONFileBackend initialised at %s", self._file)
 
     # -- internal helpers ---------------------------------------------------
@@ -217,7 +222,7 @@ class SQLiteBackend(MemoryBackend):
     def __init__(self, db_path: str | Path = ".agent/memory/memory.db") -> None:
         self._db_path = Path(db_path)
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
+        self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False, timeout=5.0)
         self._lock = threading.Lock()
         with self._conn:
             self._conn.execute(self._DDL)
