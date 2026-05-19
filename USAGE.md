@@ -61,3 +61,40 @@ documents. Recommended generated paths include:
 
 These paths are ignored in this repository so generated runtime data does not
 drift into the protocol template by accident.
+
+## 6. Anthropic skills interoperability
+
+Export local PAP skill contracts as Anthropic-style skill folders:
+
+```text
+python cli.py --export-skills --output ./anthropic_skills/
+```
+
+Sync a local Anthropic skills checkout into the PAP registry:
+
+```text
+python cli.py --sync-anthropic-skills --source ./path/to/anthropics/skills/
+```
+
+Sync directly from GitHub without cloning:
+
+```text
+python cli.py --sync-anthropic-skills --source github:anthropics/skills
+```
+
+Validate that local PAP skills can be exported:
+
+```text
+python cli.py --validate-compatibility
+```
+
+Dispatching through Claude API is optional and requires `ANTHROPIC_API_KEY`:
+
+```text
+python cli.py --tool search_web --params '{"query":"test"}' --via-claude-api --anthropic-skill-id skill_01Example --anthropic-skill-type custom
+```
+
+For Claude API Skills, exported local folders must be uploaded to Anthropic
+first, or the command must reference an existing Anthropic built-in skill id.
+PAP uses that id in the Messages API `container.skills` field and writes the
+execution result back to `.agent/memory/<skill>/<session>.md`.

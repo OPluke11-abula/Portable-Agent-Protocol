@@ -96,6 +96,19 @@ print(engine.memory.read("session_id"))
 ]
 ```
 
+### Skill writeback records
+
+Anthropic-aware skill execution writes one markdown record per invocation:
+
+```text
+.agent/memory/<skill_name>/<session_id>.md
+```
+
+Each record contains the timestamp, session id, JSON-encoded params, and
+JSON-encoded result. Routers that dispatch through external skill runtimes must
+load recent records before execution and append a new record after a successful
+result.
+
 ---
 
 ## Supporting memory guidance

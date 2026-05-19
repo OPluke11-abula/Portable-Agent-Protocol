@@ -4,6 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "portable-agent"
+version = "0.1.0"
+dependencies = ["PyYAML>=6.0", "certifi>=2024.0.0"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.25.0", "httpx>=0.27.0"]
+dev = ["pytest", "ruff", "mypy"]
 
 [project.scripts]
 portable-agent = "cli:main"
