@@ -31,9 +31,25 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
-from filelock import FileLock
+try:
+    from filelock import FileLock
+except ImportError:
+    class FileLock:  # type: ignore[no-redef]
+        """Process-local fallback when the optional filelock package is absent."""
 
-from .logger import get_logger
+        def __init__(self, lock_file: str, timeout: float = 5.0) -> None:
+            self.lock_file = lock_file
+            self.timeout = timeout
+            self._lock = threading.Lock()
+
+        def __enter__(self) -> "FileLock":
+            self._lock.acquire()
+            return self
+
+        def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+            self._lock.release()
+
+from ..logger import get_logger
 
 logger = get_logger(__name__)
 

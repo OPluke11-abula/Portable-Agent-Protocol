@@ -1,25 +1,31 @@
 # Skill: query_db
 
-## 用途
+Query structured data sources through a constrained, auditable database access
+contract.
 
-提供結構化資料查詢能力。
+## Purpose
 
-## 輸入格式
+Use this skill when the agent needs to inspect or summarize structured data from
+a database-like source. The runtime implementation must keep query intent,
+filters, and safety constraints explicit.
 
-- `connection_target`
-- `query_intent`
-- `filters`
-- `safety_constraints`
+## Required Inputs
 
-## 輸出格式
+- `connection_target`: Named database, MCP server, or runtime-managed data
+  source.
+- `query_intent`: Natural-language description of the requested data.
+- `filters`: Optional structured filters, limits, or ordering.
+- `safety_constraints`: Required access, privacy, or mutation limits.
 
-- `rows`
-- `schema_used`
-- `query_summary`
-- `risk_notes`
+## Expected Outputs
 
-## 安全原則
+- `rows`: Returned records or an empty list.
+- `schema_used`: Tables, fields, or collections referenced.
+- `query_summary`: Human-readable explanation of what was queried.
+- `risk_notes`: Any access, privacy, performance, or ambiguity concerns.
 
-- 預設只讀
-- 執行前先確認 schema
-- 高風險查詢需明確授權
+## Safety
+
+- Default to read-only behavior unless an explicit workflow authorizes writes.
+- Prefer bounded queries and explicit limits.
+- Do not expose secrets or private data beyond the requested scope.

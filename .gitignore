@@ -226,3 +226,4 @@ Thumbs.db
 .agent/logs/
 .agent/memory/vector_store/
 .agent/memory/chroma/
+anthropic_skills/

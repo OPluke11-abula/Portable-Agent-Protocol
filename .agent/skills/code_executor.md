@@ -1,24 +1,31 @@
 # Skill: code_executor
 
-## 用途
+Execute small, bounded code or shell tasks inside the runtime's configured
+sandbox.
 
-在受控環境中執行程式、腳本或測試。
+## Purpose
 
-## 輸入格式
+Use this skill when a workflow needs deterministic local execution, such as a
+syntax check, unit test, small script, or formatter. The runtime must enforce
+the declared sandbox policy and report outputs without hiding failures.
 
-- `runtime`
-- `command`
-- `working_directory`
-- `sandbox_policy`
+## Required Inputs
 
-## 輸出格式
+- `runtime`: Execution runtime or shell.
+- `command`: Command or code snippet to run.
+- `working_directory`: Directory where execution should happen.
+- `sandbox_policy`: Permissions, network access, and filesystem boundaries.
 
-- `stdout`
-- `stderr`
-- `exit_code`
-- `artifacts`
+## Expected Outputs
 
-## 失敗處理
+- `stdout`: Captured standard output.
+- `stderr`: Captured standard error.
+- `exit_code`: Process exit code.
+- `artifacts`: Any generated files or paths that matter to the workflow.
 
-- 區分語法、環境、權限錯誤
-- 成功修正後，評估是否回寫技能規則
+## Safety
+
+- Do not run destructive commands unless the workflow explicitly authorizes
+  them.
+- Keep execution scoped to the declared working directory and sandbox policy.
+- Return non-zero exits as structured results rather than suppressing errors.

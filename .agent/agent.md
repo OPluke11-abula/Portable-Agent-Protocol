@@ -7,6 +7,9 @@ purpose: Reference implementation of the Portable Agent Protocol.
 language: en-US
 authorization_level: interactive-approval
 use_case_tags: [protocol, reference]
+anthropic_skills_compatible: true
+anthropic_skills_version: "2025-05"
+skill_export_format: anthropic_v1
 description: >
   Reference implementation of the Portable Agent Protocol -
   a minimal, portable runtime for AI collaboration, skills, memory,
