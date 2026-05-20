@@ -1,6 +1,40 @@
 ---
+id: docx
 name: docx
-description: "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation."
+description: "Use this skill to create, read, edit, or manipulate Word documents (.docx files)."
+version: 1.0.0
+inputs:
+  action:
+    type: string
+    description: "The specific action to perform: 'create', 'read', 'edit', 'convert', 'accept_changes'."
+    required: true
+  file_path:
+    type: string
+    description: "Path to the .docx file (or source file to convert)."
+    required: true
+  output_path:
+    type: string
+    description: "Optional destination path for output file."
+    required: false
+  content_structure:
+    type: object
+    description: "Structured data describing new document contents or edits to make."
+    required: false
+outputs:
+  success:
+    type: boolean
+    description: "Whether the operation succeeded."
+  output_file:
+    type: string
+    description: "Path to the generated or modified file."
+  extracted_text:
+    type: string
+    description: "Extracted Markdown/plain text if action was 'read'."
+safety_notes:
+  - "Never write destructive operations without backups of source documents."
+  - "Validate generated XML structure or docx structures before returning."
+  - "Ensure temporary folders are cleared after unpacking/repacking XML."
+author: pap
 ---
 
 # DOCX creation, editing, and analysis

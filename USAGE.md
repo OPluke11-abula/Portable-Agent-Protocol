@@ -62,4 +62,66 @@ documents. Recommended generated paths include:
 These paths are ignored in this repository so generated runtime data does not
 drift into the protocol template by accident.
 
+## 6. Reference CLI Tool
+
+The Portable Agent Protocol includes a reference command-line interface (`cli.py`) that implements core runtime behaviors such as validation, skill discovery, persistent memory read/write, workflow execution, and registry/hub sync.
+
+### Initialization & Validation
+
+*   **Initialize a new workspace**: Creates the required `.agent/` folder structure, manifest, templates, and directories.
+    ```bash
+    python cli.py init
+    ```
+*   **Validate the workspace**: Verifies that the `.agent/` folder layout and manifest file strictly conform to the official protocol schemas.
+    ```bash
+    python cli.py validate
+    # OR using the --validate flag:
+    python cli.py --validate
+    ```
+
+### Skill Contract Discovery
+
+*   **List all active skill contracts**: Scans `.agent/skills/` and lists the ID, version, and description of all declared capability contracts.
+    ```bash
+    python cli.py --list-skills
+    ```
+*   **Describe a single skill contract**: Prints the complete YAML/JSON front-matter contract (inputs, outputs, safety boundaries) for a specific skill.
+    ```bash
+    python cli.py --describe-skill search_web
+    ```
+
+### Persistent Memory Operations
+
+*   **Write to memory**: Persists a key-value pair to the persistent SQLite/JSON memory backend.
+    ```bash
+    python cli.py --memory-write "key_name" "value_or_json"
+    ```
+*   **Read from memory**: Reads a stored key value from the persistent memory backend.
+    ```bash
+    python cli.py --memory-read "key_name"
+    ```
+
+### Workflow Execution
+
+*   **Run a workflow**: Executes a multi-step execution graph defined under `.agent/workflows/`.
+    ```bash
+    python cli.py --run-workflow "workflow_id" --params '{"input_arg": "value"}'
+    ```
+
+### MCP & Hub Synchronization
+
+*   **Sync Model Context Protocol (MCP) servers**: Dynamically pulls active MCP tools and registers/scaffolds their matching capability contracts.
+    ```bash
+    python cli.py mcp sync
+    ```
+*   **Pack workspace for sharing**: Packages the local `.agent/` configuration into a portable tarball, automatically excluding memory and credentials.
+    ```bash
+    python cli.py hub pack
+    ```
+*   **Clone workspace from Hub**: Clones a remote agent's `.agent/` configuration profile from the Hub.
+    ```bash
+    python cli.py hub clone "username/repo"
+    ```
+
+
 

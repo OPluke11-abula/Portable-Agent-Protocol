@@ -5,6 +5,11 @@ Usage
     python cli.py init                   # scaffold a new .agent/ workspace
     python cli.py validate               # validate the .agent/ workspace
     python cli.py mcp sync               # sync MCP server tools to .agent/skills/
+    python cli.py --list-skills          # list all active skill contracts
+    python cli.py --describe-skill <id>  # describe detailed contract of a skill
+    python cli.py --memory-read <key>    # read value from persistent memory
+    python cli.py --memory-write <k> <v> # write key-value to persistent memory
+    python cli.py --run-workflow <id>    # execute a multi-step workflow
 """
 
 from __future__ import annotations
@@ -44,14 +49,46 @@ def build_parser() -> argparse.ArgumentParser:
         "--params",
         metavar="JSON",
         default="{}",
-        help="JSON-encoded parameters for the tool (default: {})",
+        help="JSON-encoded parameters for the tool or workflow (default: {})",
     )
     parser.add_argument(
         "--show-config",
         action="store_true",
         help="Print the parsed agent config and exit",
     )
+    parser.add_argument(
+        "--list-skills",
+        action="store_true",
+        help="List all active skill contracts and exit",
+    )
+    parser.add_argument(
+        "--describe-skill",
+        metavar="SKILL_ID",
+        help="Print detailed contract of a single skill and exit",
+    )
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate the agent workspace and exit",
+    )
+    parser.add_argument(
+        "--memory-read",
+        metavar="KEY",
+        help="Read value from persistent memory by key and exit",
+    )
+    parser.add_argument(
+        "--memory-write",
+        nargs=2,
+        metavar=("KEY", "VALUE"),
+        help="Write key-value to persistent memory and exit",
+    )
+    parser.add_argument(
+        "--run-workflow",
+        metavar="WORKFLOW_ID",
+        help="Execute a multi-step workflow by ID and exit",
+    )
     return parser
+
 
 def scaffold_workspace(base_dir: Path) -> None:
     """Create a new .agent/ workspace with standard templates."""
@@ -110,11 +147,11 @@ def main(argv: list[str] | None = None) -> int:
         scaffold_workspace(Path.cwd())
         return 0
 
+    config_path = Path(args.config)
 
-        
-    if args.command and args.command[0] == "validate":
+    # 1. Handle validation option or subcommand
+    if args.validate or (args.command and args.command[0] == "validate"):
         from agent_runtime.engine import validate_agent_workspace
-        config_path = Path(args.config)
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
@@ -125,8 +162,90 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as e:
             print(f"Validation failed: {e}", file=sys.stderr)
             return 1
+
+    # 2. Handle skill listing
+    if args.list_skills:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        skills = engine.router.list_skills()
+        if not skills:
+            print("No active skill contracts found.")
+        else:
+            print(f"Active skill contracts in {engine.router._skills_dir}:")
+            for s in skills:
+                print(f"  - {s['id']} (v{s.get('version', '1.0.0')}): {s.get('description', '')}")
+        return 0
+
+    # 3. Handle skill description
+    if args.describe_skill:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        contract = engine.router.describe_skill(args.describe_skill)
+        if not contract:
+            print(f"Skill '{args.describe_skill}' not found in skills directory.", file=sys.stderr)
+            return 1
+        print(json.dumps(contract, indent=2))
+        return 0
+
+    # 4. Handle memory read
+    if args.memory_read:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        value = engine.memory.read(args.memory_read)
+        if value is None:
+            print(f"Key '{args.memory_read}' not found in persistent memory.")
+            return 0
+        print(json.dumps(value, indent=2))
+        return 0
+
+    # 5. Handle memory write
+    if args.memory_write:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        key, value = args.memory_write
+        try:
+            parsed_val = json.loads(value)
+        except json.JSONDecodeError:
+            parsed_val = value
+        engine.memory.write(key, parsed_val)
+        print(f"Successfully wrote '{key}' to persistent memory.")
+        return 0
+
+    # 6. Handle workflow execution
+    if args.run_workflow:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        try:
+            params: dict = json.loads(args.params)
+        except json.JSONDecodeError as exc:
+            print(f"Error: invalid JSON for --params: {exc}", file=sys.stderr)
+            return 1
+        print(f"Executing workflow '{args.run_workflow}'...")
+        try:
+            result = engine.execute_workflow(args.run_workflow, params)
+            print(json.dumps(result, indent=2))
+            return 0
+        except Exception as exc:
+            print(f"Workflow execution failed: {exc}", file=sys.stderr)
+            return 1
+
+    # 7. Handle MCP synchronization
     if args.command and args.command[0] == "mcp" and len(args.command) > 1 and args.command[1] == "sync":
-        config_path = Path(args.config)
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
@@ -144,6 +263,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Done!")
         return 0
 
+    # 8. Handle PAP Hub packaging and cloning
     if args.command and args.command[0] == "hub":
         if len(args.command) < 2:
             print("Error: 'hub' requires a subcommand ('pack' or 'clone').", file=sys.stderr)
@@ -161,7 +281,6 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Packing {agent_dir} to {out_file} (excluding 'memory' and secrets)...")
             with tarfile.open(out_file, "w:gz") as tar:
                 for path in agent_dir.rglob("*"):
-                    # Exclude memory and secrets
                     if "memory" in path.parts or path.suffix == ".env" or path.suffix == ".sqlite":
                         continue
                     tar.add(path, arcname=path.relative_to(agent_dir.parent))
@@ -201,7 +320,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Successfully cloned {repo_name} into .agent/")
             return 0
 
-    config_path = Path(args.config)
+    # 9. Handle default execution logic
     if not config_path.exists():
         print(f"Error: config file not found: {config_path}", file=sys.stderr)
         return 1
@@ -222,11 +341,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Error: invalid JSON for --params: {exc}", file=sys.stderr)
             return 1
 
-
-
-    engine = AgentEngine(config_path=config_path)
-
-    if args.tool:
+        engine = AgentEngine(config_path=config_path)
         try:
             result = engine.run(args.tool, params)
             print(json.dumps(result, indent=2))
@@ -237,6 +352,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
     else:
+        engine = AgentEngine(config_path=config_path)
         config = engine.config
         print(
             f"Portable Agent '{config.get('name')}' v{config.get('version')} ready.\n"

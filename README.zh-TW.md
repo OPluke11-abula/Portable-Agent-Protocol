@@ -121,16 +121,29 @@ pip install -e ".[dev]"
 
 ## 命令行介面 (CLI)
 
-初始化或驗證 PAP 工作空間：
+PAP 參考命令列介面提供了包含工作空間初始化、Schema 驗證、技能合約探索、持久化記憶體操作以及工作流執行等功能：
 
 ```bash
+# 初始化全新的 .agent/ 工作空間
 python cli.py init
+
+# 驗證本地 .agent/ 配置與 Schema 合規性
 python cli.py validate
-```
 
-執行本地 PAP 工具：
+# 列出所有已聲明的活動技能合約
+python cli.py --list-skills
 
-```bash
+# 印出指定技能合約的詳細欄位與規格
+python cli.py --describe-skill search_web
+
+# 使用持久化後端讀寫記憶體鍵值對
+python cli.py --memory-write cli_key "some_value"
+python cli.py --memory-read cli_key
+
+# 執行自動化的多步驟工作流
+python cli.py --run-workflow sample_workflow --params '{"arg": 123}'
+
+# 直接呼叫指定的本地工具
 python cli.py --tool search_web --params '{"query":"portable agents"}'
 ```
 

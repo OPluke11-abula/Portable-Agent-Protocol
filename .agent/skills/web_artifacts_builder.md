@@ -1,6 +1,37 @@
 ---
+id: web_artifacts_builder
 name: web_artifacts_builder
-description: Suite of tools for creating elaborate, multi-component LLM.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.
+description: "Suite of tools for creating elaborate, multi-component HTML web artifacts using modern frontend technologies (React, Tailwind CSS, shadcn/ui)."
+version: 1.0.0
+inputs:
+  project_name:
+    type: string
+    description: "Unique name of the frontend project directory to create or build."
+    required: true
+  action:
+    type: string
+    description: "The specific builder action: 'init', 'bundle', 'test'."
+    required: true
+  components:
+    type: array
+    description: "List of shadcn/ui components to install or configure."
+    required: false
+  options:
+    type: object
+    description: "Optional bundling or development configurations."
+    required: false
+outputs:
+  success:
+    type: boolean
+    description: "Whether the operation succeeded."
+  artifact_path:
+    type: string
+    description: "Path to the generated, self-contained single HTML bundle file."
+safety_notes:
+  - "Avoid excessive centered layouts, purple gradients, uniform rounded corners, and generic Inter fonts to prevent 'AI slop' designs."
+  - "Always compile and bundle into a single self-contained HTML file prior to final output."
+  - "Ensure no external network references are hardcoded if offline execution is required."
+author: pap
 ---
 
 # Web Artifacts Builder

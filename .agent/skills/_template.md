@@ -1,7 +1,19 @@
 ---
+id: "{{skill_name}}"
 name: "{{skill_name}}"
 description: "{{short_description_under_50_chars}}"
 version: "1.0.0"
+inputs:
+  param_1_name:
+    type: "string"
+    description: "Description of parameter 1"
+    required: true
+outputs:
+  success_format:
+    type: "object"
+    description: "Description of standard success return object"
+safety_notes:
+  - "{{constraint_1}}"
 author: "{{author_or_ai_generator}}"
 ---
 

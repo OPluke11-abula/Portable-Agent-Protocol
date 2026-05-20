@@ -69,11 +69,11 @@ effort   : S
 depends  : 0-01
 ```
 
-- [ ] 為現有每個 tool 補齊 `.agent/skills/<tool>.md`（若缺漏）
-- [ ] 確認每個 skill contract 包含欄位：`id`, `description`, `inputs`, `outputs`, `safety_notes`, `version`
-- [ ] 移除任何 skill contract 中對特定 AI 廠商的參照
-- [ ] 在 `.agent/skills.md` registry 加入 `schema_version` 欄位
-- [ ] 補充測試 `tests/test_skill_contracts.py`，驗證每個 skill 都符合 schema
+- [x] 為現有每個 tool 補齊 `.agent/skills/<tool>.md`（若缺漏）
+- [x] 確認每個 skill contract 包含欄位：`id`, `description`, `inputs`, `outputs`, `safety_notes`, `version`
+- [x] 移除任何 skill contract 中對特定 AI 廠商的參照
+- [x] 在 `.agent/skills.md` registry 加入 `schema_version` 欄位
+- [x] 補充測試 `tests/test_skill_contracts.py`，驗證每個 skill 都符合 schema
 
 ---
 
@@ -85,12 +85,12 @@ effort   : M
 depends  : 0-03
 ```
 
-- [ ] `agent_runtime/router.py` 加入 schema 驗證：呼叫前檢查 inputs 是否符合 skill contract
-- [ ] 加入 `Router.list_skills()` 方法，回傳結構化的 skill 清單
-- [ ] 加入 `Router.describe_skill(skill_id)` 方法，回傳單一 skill 的 contract 內容
-- [ ] 加入 `Router.validate_call(skill_id, params)` 方法，呼叫前乾跑驗證
-- [ ] 加入 routing 失敗時的明確錯誤訊息（包含 skill_id、缺少欄位名稱）
-- [ ] 補充測試 `tests/test_router_validation.py`
+- [x] `agent_runtime/router.py` 加入 schema 驗證：呼叫前檢查 inputs 是否符合 skill contract
+- [x] 加入 `Router.list_skills()` 方法，回傳結構化的 skill 清單
+- [x] 加入 `Router.describe_skill(skill_id)` 方法，回傳單一 skill 的 contract 內容
+- [x] 加入 `Router.validate_call(skill_id, params)` 方法，呼叫前乾跑驗證
+- [x] 加入 routing 失敗時的明確錯誤訊息（包含 skill_id、缺少欄位名稱）
+- [x] 補充測試 `tests/test_router_validation.py`
 
 ---
 
@@ -102,13 +102,13 @@ effort   : S
 depends  : 0-04
 ```
 
-- [ ] `cli.py` 加入 `--list-skills` 指令，印出所有可用 skill 清單
-- [ ] `cli.py` 加入 `--describe-skill <id>` 指令，印出 skill contract 詳情
-- [ ] `cli.py` 加入 `--validate` 指令，檢查整個 `.agent/` 結構是否合法
-- [ ] `cli.py` 加入 `--memory-read <key>` 指令
-- [ ] `cli.py` 加入 `--memory-write <key> <value>` 指令
-- [ ] `cli.py` 加入 `--run-workflow <id>` 指令
-- [ ] 更新 `USAGE.md` 反映新 CLI 選項
+- [x] `cli.py` 加入 `--list-skills` 指令，印出所有可用 skill 清單
+- [x] `cli.py` 加入 `--describe-skill <id>` 指令，印出 skill contract 詳情
+- [x] `cli.py` 加入 `--validate` 指令，檢查整個 `.agent/` 結構是否合法
+- [x] `cli.py` 加入 `--memory-read <key>` 指令
+- [x] `cli.py` 加入 `--memory-write <key> <value>` 指令
+- [x] `cli.py` 加入 `--run-workflow <id>` 指令
+- [x] 更新 `USAGE.md` 反映新 CLI 選項
 
 ---
 

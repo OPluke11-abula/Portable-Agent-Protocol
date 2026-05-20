@@ -1,6 +1,44 @@
 ---
+id: pdf
 name: pdf
-description: Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill.
+description: "Use this skill to extract text/tables, merge, split, rotate, watermark, create, encrypt/decrypt, or perform OCR on PDF files."
+version: 1.0.0
+inputs:
+  action:
+    type: string
+    description: "The specific action to perform: 'extract_text', 'merge', 'split', 'rotate', 'watermark', 'encrypt', 'decrypt', 'ocr'."
+    required: true
+  file_path:
+    type: string
+    description: "Path to the primary input PDF file."
+    required: true
+  additional_files:
+    type: array
+    description: "Optional list of additional PDF files (e.g. for merging)."
+    required: false
+  output_path:
+    type: string
+    description: "Optional destination path for the output file."
+    required: false
+  options:
+    type: object
+    description: "Optional action-specific settings (e.g. rotation angle, passwords)."
+    required: false
+outputs:
+  success:
+    type: boolean
+    description: "Whether the operation succeeded."
+  output_file:
+    type: string
+    description: "Path to the generated or modified file."
+  extracted_text:
+    type: string
+    description: "Extracted Markdown/plain text if action was 'extract_text'."
+safety_notes:
+  - "Do not overwrite input documents unless explicitly commanded."
+  - "Verify PDF integrity and check for malformed pages after compilation."
+  - "Keep decryption keys and passwords handled securely in-memory only."
+author: pap
 ---
 
 # PDF Processing Guide

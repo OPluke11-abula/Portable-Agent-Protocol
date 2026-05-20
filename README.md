@@ -136,16 +136,29 @@ pip install -e ".[dev]"
 
 ## CLI
 
-Initialize or validate a PAP workspace:
+The PAP reference CLI provides commands for workspace initialization, schema-enforced validations, skill discovery, memory operations, and workflow runs:
 
 ```bash
+# Initialize a new .agent/ workspace
 python cli.py init
+
+# Validate the local .agent/ layout and files against schemas
 python cli.py validate
-```
 
-Run a local PAP tool:
+# List all declared active skill contracts
+python cli.py --list-skills
 
-```bash
+# Print the detailed schema and contract of a single skill
+python cli.py --describe-skill search_web
+
+# Persist and read key-value data using the memory backend
+python cli.py --memory-write cli_key "some_value"
+python cli.py --memory-read cli_key
+
+# Run an automated multi-step workflow
+python cli.py --run-workflow sample_workflow --params '{"arg": 123}'
+
+# Invoke a specific local tool directly
 python cli.py --tool search_web --params '{"query":"portable agents"}'
 ```
 

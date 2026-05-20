@@ -1,6 +1,40 @@
 ---
+id: xlsx
 name: xlsx
-description: "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved."
+description: "Use this skill to create, read, edit, or format spreadsheet files (.xlsx, .xlsm, .csv, .tsv)."
+version: 1.0.0
+inputs:
+  action:
+    type: string
+    description: "The specific action to perform: 'create', 'read', 'edit', 'convert', 'recalculate'."
+    required: true
+  file_path:
+    type: string
+    description: "Path to the target spreadsheet file."
+    required: true
+  content_structure:
+    type: object
+    description: "Structured representation of sheet data, formulas, styles, or modifications."
+    required: false
+  output_path:
+    type: string
+    description: "Optional destination path for the output file."
+    required: false
+outputs:
+  success:
+    type: boolean
+    description: "Whether the operation succeeded."
+  output_file:
+    type: string
+    description: "Path to the generated or modified spreadsheet file."
+  sheets_data:
+    type: object
+    description: "Extracted sheet contents mapped by sheet name if action was 'read'."
+safety_notes:
+  - "Every Excel model MUST be delivered with ZERO formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?)."
+  - "Study and EXACTLY match existing format, style, and conventions when modifying pre-existing templates."
+  - "Always use Excel formulas instead of calculating values in Python and hardcoding them."
+author: pap
 ---
 
 # Requirements for Outputs

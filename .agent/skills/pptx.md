@@ -1,6 +1,47 @@
 ---
+id: pptx
 name: pptx
-description: "Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \"deck,\" \"slides,\" \"presentation,\" or references a .pptx filename, regardless of what they plan to do with the content afterward. If a .pptx file needs to be opened, created, or touched, use this skill."
+description: "Use this skill to read, write, edit, and convert PowerPoint presentations (.pptx files)."
+version: 1.0.0
+inputs:
+  action:
+    type: string
+    description: "The specific action to perform: 'create', 'read', 'edit', 'convert', 'verify'."
+    required: true
+  file_path:
+    type: string
+    description: "Path to the target .pptx file."
+    required: true
+  template_path:
+    type: string
+    description: "Optional path to a template or reference presentation."
+    required: false
+  content_structure:
+    type: object
+    description: "Structured data describing the slide outline, text, styles, and imagery."
+    required: false
+  output_path:
+    type: string
+    description: "Optional destination path for the output file."
+    required: false
+outputs:
+  success:
+    type: boolean
+    description: "Whether the operation succeeded."
+  output_file:
+    type: string
+    description: "Path to the generated or modified file."
+  extracted_text:
+    type: string
+    description: "Extracted Markdown/plain text if action was 'read'."
+  slide_images:
+    type: array
+    description: "List of paths to generated slide preview images (JPEG) if requested."
+safety_notes:
+  - "Never build text-only slide decks or plain-bullet white slides; enforce beautiful designs."
+  - "Never use low-contrast text or accent lines directly under titles."
+  - "Always check for leftover placeholder strings in the final presentation prior to returning."
+author: pap
 ---
 
 # PPTX Skill

@@ -77,8 +77,8 @@ class TestSearchWebTool:
             assert "snippet" in item
 
     def test_missing_query_returns_error(self) -> None:
-        result = self.router.route("search_web", {})
-        assert "error" in result
+        with pytest.raises(ValueError, match="missing required input field"):
+            self.router.route("search_web", {})
 
 
 class TestQueryDbTool:
@@ -86,13 +86,13 @@ class TestQueryDbTool:
         self.router = Router(tools=["query_db"])
 
     def test_returns_rows(self) -> None:
-        result = self.router.route("query_db", {"sql": "SELECT 1"})
+        result = self.router.route("query_db", {"connection_target": "default", "query_intent": "SELECT 1"})
         assert "rows" in result
         assert len(result["rows"]) >= 1
 
     def test_missing_sql_returns_error(self) -> None:
-        result = self.router.route("query_db", {})
-        assert "error" in result
+        with pytest.raises(ValueError, match="missing required input field"):
+            self.router.route("query_db", {"connection_target": "default"})
 
 
 class TestCodeExecutorTool:
@@ -100,22 +100,22 @@ class TestCodeExecutorTool:
         self.router = Router(tools=["code_executor"])
 
     def test_runs_simple_code(self) -> None:
-        result = self.router.route("code_executor", {"code": "print('hello')"})
+        result = self.router.route("code_executor", {"runtime": "python", "command": "print('hello')"})
         assert result["exit_code"] == 0
         assert "hello" in result["stdout"]
 
     def test_captures_stderr(self) -> None:
         result = self.router.route(
-            "code_executor", {"code": "import sys; sys.stderr.write('err\\n')"}
+            "code_executor", {"runtime": "python", "command": "import sys; sys.stderr.write('err\\n')"}
         )
         assert "err" in result["stderr"]
 
     def test_missing_code_returns_error(self) -> None:
-        result = self.router.route("code_executor", {})
-        assert "error" in result
+        with pytest.raises(ValueError, match="missing required input field"):
+            self.router.route("code_executor", {"runtime": "python"})
 
     def test_non_zero_exit_on_syntax_error(self) -> None:
-        result = self.router.route("code_executor", {"code": "def broken syntax"})
+        result = self.router.route("code_executor", {"runtime": "python", "command": "def broken syntax"})
         assert result["exit_code"] != 0
 
 

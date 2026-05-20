@@ -244,9 +244,18 @@ class AgentEngine:
         validate_agent_schema(self.config, self.config_path)
         validate_agent_config_paths(self.config, self.config_path)
         self.layout = load_agent_layout(self.config, self.config_path)
+        
+        # Resolve skills directory path
+        skills_dir_path = None
+        if self.layout and isinstance(self.layout, dict):
+            skills_dir_path = self.layout.get("directories", {}).get("skills")
+        if not skills_dir_path:
+            skills_dir_path = Path(".agent/skills")
+
         self.router = Router(
             tools=self.config.get("tools", []), 
-            mcp_servers=self.config.get("mcp_servers", {})
+            mcp_servers=self.config.get("mcp_servers", {}),
+            skills_dir=skills_dir_path
         )
 
         # -- Schema Evolution ------------------------------------------------
