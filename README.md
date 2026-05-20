@@ -79,6 +79,11 @@ The `.agent/` workspace follows a three-layer model:
   skills.md                        Runtime-facing skill registry
   prompts.md                       Prompt registry
   memory.md                        Memory contract
+  memory/                          Tiered Memory Storage
+    episodic/                      Turn-by-turn history (.jsonl)
+    semantic/                      Durable structured knowledge (.json)
+    handoff/                       Inter-agent context packets (.json)
+    schema.json                    JSON Schema for memory validation
   workflows.md                     Workflow registry
 
 spec/                              Protocol JSON Schema Definitions

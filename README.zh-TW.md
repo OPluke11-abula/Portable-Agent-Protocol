@@ -67,6 +67,11 @@ flowchart LR
   skills.md                        面向執行期的技能註冊表
   prompts.md                       Prompt 註冊表
   memory.md                        記憶體合約
+  memory/                          階層式記憶體儲存目錄
+    episodic/                      情境/交互對話記憶 (.jsonl)
+    semantic/                      語意/長期知識概念 (.json)
+    handoff/                       交接包/跨代理上下文 (.json)
+    schema.json                    記憶體驗證 JSON Schema
   workflows.md                     工作流註冊表
 
 spec/                              協定 JSON Schema 定義目錄

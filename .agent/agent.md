@@ -38,6 +38,11 @@ protocol:
     knowledge_base: .agent/knowledge_base/
 memory:
   backend: local
+  tiers:
+    ephemeral: in_memory
+    session: in_memory
+    persistent: local
+    shared: sqlite
   path: .agent/memory/
 prompts:
   path: .agent/prompts.md

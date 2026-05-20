@@ -86,6 +86,14 @@ class MemoryBackend(ABC):
         retrieval.
         """
 
+    def query(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+        """Query the memory backend. Delegates to ``search`` by default.
+
+        This ensures backwards compatibility across all memory backend types
+        while providing a standard interface for executing query searches.
+        """
+        return self.search(query, top_k=top_k)
+
     @abstractmethod
     def clear(self) -> None:
         """Remove **all** entries from the store."""
