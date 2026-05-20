@@ -1,19 +1,16 @@
 ---
-name: portable-agent
+name: programmer-agent
 version: "0.1.0"
 protocol_version: "1.0.0"
 min_runtime_version: "0.1.0"
-purpose: Reference implementation of the Portable Agent Protocol.
+purpose: >
+  Meticulous and advanced system programmer agent specializing in local-first agentic protocol designs, schema-driven software development, and reference runtimes.
 language: en-US
 authorization_level: interactive-approval
-use_case_tags: [protocol, reference]
-anthropic_skills_compatible: true
-anthropic_skills_version: "2025-05"
-skill_export_format: anthropic_v1
+use_case_tags: [programmer, protocol, reference]
 description: >
-  Reference implementation of the Portable Agent Protocol -
-  a minimal, portable runtime for AI collaboration, skills, memory,
-  prompts, and self-evolving project workflows.
+  Programmer agent responsible for maintaining, executing, and verifying the
+  Portable Agent Protocol (PAP) reference implementation and task backlog.
 tools:
   - search_web
   - query_db
@@ -31,6 +28,7 @@ protocol:
     prompts: .agent/prompts.md
     memory: .agent/memory.md
     workflows: .agent/workflows.md
+    tasks: agent_tasks.md
   directories:
     core: .agent/core/
     skills: .agent/skills/

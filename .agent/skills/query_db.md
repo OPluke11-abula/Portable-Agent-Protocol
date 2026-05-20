@@ -1,3 +1,10 @@
+---
+name: query_db
+description: Query structured data sources through a constrained, auditable database access contract.
+version: 1.0.0
+author: pap
+---
+
 # Skill: query_db
 
 Query structured data sources through a constrained, auditable database access

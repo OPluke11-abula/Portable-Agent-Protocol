@@ -1,3 +1,10 @@
+---
+name: code_executor
+description: Execute small, bounded code or shell tasks inside the runtime's configured sandbox.
+version: 1.0.0
+author: pap
+---
+
 # Skill: code_executor
 
 Execute small, bounded code or shell tasks inside the runtime's configured

@@ -32,6 +32,15 @@ stable workspace that can travel between those environments:
 An agent can clone a project, read `.agent/agent.md`, and recover the project's
 collaboration contract without relying on one vendor's runtime state.
 
+## Agent Onboarding & Bootstrapping (.AGENT)
+
+To enable incoming AI agents to instantly align with their persona, active tasks, and execution rules, the repository defines a root-level onboarding configuration:
+
+*   **[.AGENT.md](.AGENT.md)**: The human-readable and agent-facing entry point. It declares the agent's identity as a Lead Systems Programmer, lists its skills directory (`.agent/skills/`), details its task queue (`agent_tasks.md`), and specifies high-priority post-work execution routines.
+*   **[.cursorrules](.cursorrules)**: The IDE integration layer that automatically directs modern AI coding tools to read `.AGENT.md` and `.agent/agent.md` upon session startup.
+
+*Note: Due to case-insensitive naming conflicts on Windows between a root file and a directory sharing the name `.agent`, the root-level configuration is named `.AGENT.md` instead of `.AGENT`.*
+
 ## Architecture
 
 ```mermaid
@@ -58,56 +67,51 @@ The `.agent/` workspace follows a three-layer model:
 3. Detailed directories: `.agent/*/` folders hold detailed specs, templates,
    and supporting guidance.
 
-## Anthropic Skills Integration
 
-PAP now interoperates with Anthropic-style Agent Skills. Anthropic skills define
-portable skill folders with a top-level `SKILL.md`; PAP provides the upper
-orchestration layer around those skills: registry sync, memory writeback,
-workflow ownership, prompt policy, and runtime routing.
-
-```mermaid
-flowchart LR
-    A["PAP .agent/skills/*.md"] --> B["Format Bridge"]
-    B --> C["anthropic_skills/*/SKILL.md"]
-    D["Anthropic skills repo"] --> E["Registry Loader"]
-    E --> F[".agent/skills.md"]
-    F --> G["Router"]
-    G --> H["Local PAP runtime"]
-    G --> I["Claude API container.skills"]
-    I --> J[".agent/memory/<skill>/<session>.md"]
-```
-
-Supported flows:
-
-- Export local PAP contracts to Anthropic `SKILL.md` folders.
-- Load local Anthropic skill folders into `.agent/skills.md`.
-- Sync Anthropic's public skills repository directly from GitHub.
-- Validate local PAP skill contracts for Anthropic frontmatter compatibility.
-- Dispatch through Claude API with PAP memory context and optional
-  `container.skills` references for uploaded custom skills or Anthropic
-  built-ins.
 
 ## Repository Layout
 
 ```text
+.AGENT.md                          Root onboarding entrypoint (Windows compatible)
+.cursorrules                       Root IDE / agent bridge
 .agent/
   agent.md                         Executable PAP manifest
   skills.md                        Runtime-facing skill registry
   prompts.md                       Prompt registry
   memory.md                        Memory contract
   workflows.md                     Workflow registry
-  knowledge_base/
-    anthropic_integration.md       PAP x Anthropic design notes
+
+spec/                              Protocol JSON Schema Definitions
+  agent-schema.json                JSON Schema for agent.md manifest
+  skill-contract.schema.json       JSON Schema for skill contracts
+  memory.schema.json               JSON Schema for memory layouts
+  workflow.schema.json             JSON Schema for workflows
+
 agent_runtime/
   engine.py                        Runtime bootstrap and layout validation
   router.py                        Local, MCP, and Claude API dispatch
-  bridges/anthropic_skill_bridge.py
-  loaders/anthropic_skills_loader.py
+
   memory/
     __init__.py                    Memory backends
     writeback.py                   Skill execution writeback
 tests/                             Pytest coverage for runtime and integrations
 ```
+
+## Protocol Schema Validation (`spec/`)
+
+To ensure vendor-agnostic portability and strict structural integrity, the Portable Agent Protocol utilizes standard **JSON Schema (Draft-07)** to formally define and validate all core configuration files.
+
+The schemas are defined under the `spec/` directory:
+- **[agent-schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/agent-schema.json)**: Standardizes the executable manifest `.agent/agent.md` YAML front-matter (e.g. tools, memory tiers, protocol layout, runtime settings).
+- **[skill-contract.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/skill-contract.schema.json)**: Outlines capability contracts in `.agent/skills/*.md`.
+- **[memory.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/memory.schema.json)**: Formulates long-term, semantic, episodic, and handoff memory formats.
+- **[workflow.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/workflow.schema.json)**: Structures the steps and dependency graphs (DAG) in `.agent/workflows/*.md`.
+
+Runtimes validate these layouts automatically during bootstrap. You can trigger manual validation using the CLI:
+```bash
+python cli.py validate
+```
+
 
 ## Installation
 
@@ -123,11 +127,7 @@ For development:
 pip install -e ".[dev]"
 ```
 
-For Claude API skill dispatch:
 
-```bash
-pip install -e ".[anthropic]"
-```
 
 ## CLI
 
@@ -144,58 +144,7 @@ Run a local PAP tool:
 python cli.py --tool search_web --params '{"query":"portable agents"}'
 ```
 
-Export local PAP skill contracts as Anthropic skill folders:
 
-```bash
-python cli.py --export-skills --output ./anthropic_skills/
-```
-
-Sync Anthropic skills into the PAP registry:
-
-```bash
-python cli.py --sync-anthropic-skills --source ./path/to/anthropics/skills/
-python cli.py --sync-anthropic-skills --source github:anthropics/skills
-```
-
-Validate local skill export compatibility:
-
-```bash
-python cli.py --validate-compatibility
-```
-
-Dispatch through Claude API:
-
-```bash
-python cli.py --tool search_web \
-  --params '{"query":"test"}' \
-  --via-claude-api \
-  --anthropic-skill-id skill_01Example \
-  --anthropic-skill-type custom
-```
-
-For Anthropic built-in document skills, use the built-in skill id:
-
-```bash
-python cli.py --tool xlsx \
-  --params '{"task":"Create a budget spreadsheet"}' \
-  --via-claude-api \
-  --anthropic-skill-id xlsx \
-  --anthropic-skill-type anthropic
-```
-
-Claude API dispatch requires `ANTHROPIC_API_KEY`. PAP loads recent skill memory
-before dispatch and writes the result to `.agent/memory/<skill>/<session>.md`.
-
-## Skill Compatibility Rules
-
-- PAP skill names use snake_case.
-- Anthropic skill folder names use kebab-case.
-- Exported `SKILL.md` files must have `name` and `description` frontmatter.
-- Descriptions must be non-empty and concise.
-- Local PAP runtime skills remain authoritative when a synced external skill
-  has the same name.
-- Synced external skills are registry entries until a runtime tool or uploaded
-  Claude API skill id is available.
 
 ## Memory
 
@@ -236,7 +185,6 @@ Run the standard verification set:
 ```bash
 python -m pytest
 python -m compileall cli.py agent_runtime tests
-python cli.py --validate-compatibility
 ```
 
 The layout tests enforce that `.agent/agent.md`, top-level entry documents, and

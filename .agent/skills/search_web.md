@@ -1,3 +1,10 @@
+---
+name: search_web
+description: Search trusted web sources and return cited, confidence-scored summaries.
+version: 1.0.0
+author: pap
+---
+
 # Skill: search_web
 
 Search trusted web sources and return cited, confidence-scored summaries.

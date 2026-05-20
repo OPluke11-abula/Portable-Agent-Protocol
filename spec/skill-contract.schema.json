@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/OPluke11-abula/Portable-Agent-Protocol/main/spec/skill-contract.schema.json",
+  "title": "Portable Agent Protocol Skill Contract Schema",
+  "description": "JSON Schema for validating the YAML front-matter of .agent/skills/*.md",
+  "type": "object",
+  "required": [
+    "name",
+    "description"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique, machine-readable identifier of the skill.",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "A clear, concise summary of the skill's capabilities and trigger conditions."
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of this skill contract (semver).",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0"
+    },
+    "author": {
+      "type": "string",
+      "description": "The author or generator of this skill contract.",
+      "default": "pap"
+    }
+  }
+}

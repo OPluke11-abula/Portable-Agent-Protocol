@@ -1,0 +1,11 @@
+# Cursor & Claude Code Agent Rules
+
+When starting a session or performing coding tasks in this repository, you MUST bootstrap your environment and instructions by reading the following entry points immediately:
+
+1.  **Read Onboarding & Core Identity**: [.AGENT.md](file:///.AGENT.md)
+    - Understand your role as a Systems Programmer.
+    - Adhere strictly to the **5 High-Priority Execution Rules** at the end of every work session.
+2.  **Read Executable Manifest**: [.agent/agent.md](file:///.agent/agent.md)
+    - Bootstrap the declared layout, skills, and configuration paths.
+3.  **Read Task Backlog**: [agent_tasks.md](file:///agent_tasks.md)
+    - Review the active task queue and update progress as you complete tasks.

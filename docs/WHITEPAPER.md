@@ -22,13 +22,13 @@ AI Agent 生態系正快速擴張，但我們發現缺少了最關鍵的一環�
 
 When building multi-agent systems, teams face two extreme approaches:
 1. **Heavy Frameworks (LangChain, LlamaIndex, AutoGen):** Excellent for quick prototyping but introduce steep learning curves, rapid deprecation cycles, and rigid, hard-to-debug abstractions.
-2. **Raw Model APIs (OpenAI, Anthropic):** Maximum flexibility, but zero built-in persistence. Developers must reinvent how agents remember past conversations, discover tools, and execute multi-step workflows.
+2. **Raw Model APIs (OpenAI, Vendor LLMs):** Maximum flexibility, but zero built-in persistence. Developers must reinvent how agents remember past conversations, discover tools, and execute multi-step workflows.
 
 **The Result:** A lack of "Workspace Portability". An agent built in Python using Framework A cannot easily share its prompts, tools, or memory with a TypeScript agent using Framework B.
 
 當建構多智能體系統時，團隊通常面臨兩種極端：
 1. **重度框架（LangChain, LlamaIndex, AutoGen）：** 適合快速建立原型，但學習曲線陡峭、棄用週期短，且其抽象層往往僵化且難以除錯。
-2. **原生模型 API（OpenAI, Anthropic）：** 提供最大彈性，但完全沒有內建持久化機制。開發者必須重新發明輪子來處理 Agent 的記憶、工具發現與多步驟工作流。
+2. **原生模型 API（OpenAI, Vendor LLMs）：** 提供最大彈性，但完全沒有內建持久化機制。開發者必須重新發明輪子來處理 Agent 的記憶、工具發現與多步驟工作流。
 
 **結果：** 缺乏「工作區可攜性 (Workspace Portability)」。用 Python 搭配 A 框架寫的 Agent，無法輕易地將它的提示詞、工具或記憶，分享給用 TypeScript 搭配 B 框架寫的 Agent。
 
@@ -54,12 +54,12 @@ PAP 不依賴複雜的 JSON 負載或僵硬的資料庫 Schema，而是將 Agent
 
 PAP is designed to complement, not compete with, emerging standards:
 
-- **vs. Anthropic MCP (Model Context Protocol):** MCP defines a standard JSON-RPC protocol for connecting an AI to external tools and data sources. **PAP integrates with MCP**. PAP acts as the project-level orchestrator (the "brain" and "workspace") that can sync and consume MCP tools (the "hands"), translating MCP JSON Schemas into readable `.agent/skills/*.md` contracts.
+- **vs. MCP (Model Context Protocol):** MCP defines a standard JSON-RPC protocol for connecting an AI to external tools and data sources. **PAP integrates with MCP**. PAP acts as the project-level orchestrator (the "brain" and "workspace") that can sync and consume MCP tools (the "hands"), translating MCP JSON Schemas into readable `.agent/skills/*.md` contracts.
 - **vs. Google A2A (Agent-to-Agent):** A2A focuses on how agents communicate messages over the wire. PAP focuses on the shared local workspace and memory contract.
 
 PAP 的設計理念是與新興標準「互補」，而非競爭：
 
-- **對比 Anthropic MCP：** MCP 定義了 AI 連接外部工具的 JSON-RPC 協定標準。**PAP 無縫整合 MCP**。PAP 作為專案級別的協調者（大腦與工作區），負責同步並消耗 MCP Server 的工具（手腳），將 MCP 的 Schema 轉譯成可讀的 `.agent/skills/*.md` 檔案。
+- **對比 MCP：** MCP 定義了 AI 連接外部工具的 JSON-RPC 協定標準。**PAP 無縫整合 MCP**。PAP 作為專案級別的協調者（大腦與工作區），負責同步並消耗 MCP Server 的工具（手腳），將 MCP 的 Schema 轉譯成可讀的 `.agent/skills/*.md` 檔案。
 - **對比 Google A2A：** A2A 專注於 Agent 之間的即時訊息通訊協定，而 PAP 則專注於共享的本地工作區與持久化記憶合約。
 
 ---

@@ -102,9 +102,11 @@ def validate_agent_schema(config: dict[str, Any], config_path: Path) -> None:
         return
         
     project_root = _project_root_from_config(config_path)
-    schema_path = project_root / "schemas" / "agent-schema.json"
+    schema_path = project_root / "spec" / "agent-schema.json"
     if not schema_path.exists():
-        logger.warning("agent-schema.json not found at %s. Schema validation skipped.", schema_path)
+        schema_path = project_root / "schemas" / "agent-schema.json"
+    if not schema_path.exists():
+        logger.warning("agent-schema.json not found in spec/ or schemas/. Schema validation skipped.")
         return
         
     try:
