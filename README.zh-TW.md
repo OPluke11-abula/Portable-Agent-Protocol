@@ -79,16 +79,24 @@ spec/                              協定 JSON Schema 定義目錄
   skill-contract.schema.json       技能合約的 JSON Schema
   memory.schema.json               記憶體版面佈局的 JSON Schema
   workflow.schema.json             工作流定義的 JSON Schema
+  knowledge.schema.json            知識庫條目的 JSON Schema
 
 agent_runtime/
   engine.py                        執行期啟動與版面佈局驗證
   router.py                        本地、MCP 與 Claude API 分發路由
+  knowledge.py                     唯讀知識庫查詢介面
 
   memory/
     __init__.py                    記憶體後端實作
     writeback.py                   技能執行回寫器
 tests/                             執行期與整合的 Pytest 測試套件
 ```
+
+### 知識庫
+
+持久性的專案知識儲存在 `.agent/knowledge_base/` 目錄中。每個條目都是一個帶有 YAML front-matter（`id`、`title`、`tags`、`created`、`updated`）的 Markdown 檔案，並透過 `spec/knowledge.schema.json` 進行驗證。`index.json` 註冊檔案會編錄所有條目。
+
+知識庫在執行期間為**唯讀**——任何修改都必須經由 T-04 Protocol Evolution 流程進行。
 
 ## 協協定 Schema 驗證 (`spec/`)
 
@@ -99,6 +107,7 @@ Schema 定義於 `spec/` 目錄下：
 *   **[skill-contract.schema.json](spec/skill-contract.schema.json)**：概述 `.agent/skills/*.md` 中的能力合約。
 *   **[memory.schema.json](spec/memory.schema.json)**：規劃長期、語義、情境與交接記憶格式。
 *   **[workflow.schema.json](spec/workflow.schema.json)**：建構 `.agent/workflows/*.md` 中的步驟與相依性圖表 (DAG)。
+*   **[knowledge.schema.json](spec/knowledge.schema.json)**：驗證知識庫條目的 front-matter 元資料（`id`、`title`、`tags`、`created`、`updated`）。
 
 執行期會在啟動時自動驗證這些版面。您可以使用 CLI 觸發手動驗證：
 ```bash
@@ -124,11 +133,23 @@ pip install -e ".[dev]"
 PAP 參考命令列介面提供了包含工作空間初始化、Schema 驗證、技能合約探索、持久化記憶體操作以及工作流執行等功能：
 
 ```bash
-# 初始化全新的 .agent/ 工作空間
+# 初始化全新的 .agent/ 工作空間（互動模式）
 python cli.py init
+
+# 使用明確參數初始化（非互動模式）
+python cli.py init --project-name my-proj --agent-name my-agent --skills search_web,query_db
+
+# 乾跑模式（預覽而不寫入檔案）
+python cli.py init --project-name my-proj --agent-name my-agent --dry-run
 
 # 驗證本地 .agent/ 配置與 Schema 合規性
 python cli.py validate
+
+# 檢查工作空間語法、版本號以及工作流 DAG 依賴一致性
+python cli.py lint
+
+# 自動修復可自動化處理的 lint 問題
+python cli.py lint --fix
 
 # 列出所有已聲明的活動技能合約
 python cli.py --list-skills
@@ -145,6 +166,18 @@ python cli.py --run-workflow sample_workflow --params '{"arg": 123}'
 
 # 直接呼叫指定的本地工具
 python cli.py --tool search_web --params '{"query":"portable agents"}'
+
+# 以關鍵字搜尋知識庫條目
+python cli.py --query-knowledge "architecture"
+
+# 以 ID 取得指定知識庫條目
+python cli.py --get-knowledge api-docs
+
+# 匯出已簽署的跨代理狀態交接封包
+python cli.py --export-handoff '{"task_state": "Step A done", "pending_steps": ["Do Step B"], "context_summary": "Planning done", "memory_keys": ["data_key"], "handoff_id": "handoff-id"}'
+
+# 匯入並從交接封包檔案還原狀態
+python cli.py --import-handoff "handoff-id"
 ```
 
 ## 記憶體系統
@@ -162,6 +195,13 @@ Python 參考執行期支援以下記憶體後端：
 from agent_runtime.memory import create_memory_backend
 from agent_runtime.memory.writeback import write_skill_result
 ```
+
+## 跨代理狀態交接 (Cross-Agent Handoff)
+
+Portable Agent Protocol 包含一個健全的、經過 Schema 驗證的任務交接機制，允許在不同代理之間（例如：從規劃代理到編碼代理）乾淨地序列化、計算 SHA-256 完整性校驗碼、並傳輸狀態、上下文摘要及記憶體快照。
+
+- **匯出交接 (Export Handoff)**：`engine.export_handoff(task_state, pending_steps, context_summary, memory_keys)` 會封裝當前狀態，並在 `.agent/memory/handoff/<handoff_id>.json` 下建立一個已簽署的交接封包檔案。
+- **匯入交接 (Import Handoff)**：`engine.import_handoff(handoff_id)` 驗證交接封包的完整性校驗碼，並根據 `spec/memory.schema.json` 驗證其 Schema 結構，最後將記憶體快照還原至目標引擎的活動記憶體後端中。
 
 ## MCP 橋接器
 

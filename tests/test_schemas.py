@@ -87,3 +87,70 @@ class TestProtocolSchemas:
                 jsonschema.validate(instance=workflow_config, schema=schema)
             except Exception as e:
                 pytest.fail(f"Workflow contract {path.name} failed schema validation: {e}")
+
+    def test_knowledge_entries_schema(self) -> None:
+        """Validate all knowledge entries in .agent/knowledge_base/*.md against spec/knowledge.schema.json."""
+        kb_dir = Path(".agent/knowledge_base")
+        schema_path = Path("spec/knowledge.schema.json")
+
+        assert kb_dir.exists()
+        assert schema_path.exists()
+
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        kb_files = [
+            p for p in kb_dir.glob("*.md")
+            if p.name not in ("__init__.md",)
+        ]
+        assert len(kb_files) > 0, "No knowledge base files found"
+
+        for path in kb_files:
+            try:
+                kb_config = _load_frontmatter(path)
+                jsonschema.validate(instance=kb_config, schema=schema)
+            except Exception as e:
+                pytest.fail(f"Knowledge entry {path.name} failed schema validation: {e}")
+
+    def test_prompt_contracts_schema(self) -> None:
+        """Validate all prompt contracts in .agent/prompts/*.md against spec/prompt.schema.json."""
+        prompts_dir = Path(".agent/prompts")
+        schema_path = Path("spec/prompt.schema.json")
+
+        assert prompts_dir.exists()
+        assert schema_path.exists()
+
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        prompt_files = [
+            p for p in prompts_dir.glob("*.md")
+            if p.name not in ("__init__.md",)
+        ]
+        assert len(prompt_files) > 0, "No prompt files found"
+
+        for path in prompt_files:
+            text = path.read_text(encoding="utf-8")
+            match = _FRONTMATTER_RE.match(text)
+            if not match:
+                pytest.fail(f"Prompt file {path.name} is missing front matter")
+
+            try:
+                metadata = yaml.safe_load(match.group(1)) or {}
+            except yaml.YAMLError as exc:
+                pytest.fail(f"Prompt file {path.name} has invalid YAML front matter: {exc}")
+
+            body = text[match.end():].strip()
+
+            prompt_dict = {
+                "id": metadata.get("id", path.stem),
+                "version": metadata.get("version", "1.0.0"),
+                "usage": metadata.get("usage", ""),
+                "variables": metadata.get("variables", []),
+                "template": body,
+            }
+
+            try:
+                jsonschema.validate(instance=prompt_dict, schema=schema)
+            except Exception as e:
+                pytest.fail(f"Prompt contract {path.name} failed schema validation: {e}")
+
+

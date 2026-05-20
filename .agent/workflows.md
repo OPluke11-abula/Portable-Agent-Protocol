@@ -1,3 +1,7 @@
+---
+schema_version: "1.0.0"
+---
+
 # Workflow Registry
 
 This file is the canonical runtime-facing workflow registry for the Portable Agent.

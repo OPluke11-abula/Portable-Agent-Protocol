@@ -1,4 +1,176 @@
 {
   "test_key": "hello",
-  "cli_test_key": "cli_val"
+  "cli_test_key": "cli_val",
+  "target_module": "agent_runtime.prompt_composer",
+  "refactoring_steps": [
+    "Define prompt.schema.json",
+    "Implement PromptComposer loader",
+    "Add prompt injection protection patterns"
+  ],
+  "status_report": {
+    "progress": "33%",
+    "current_step": 1
+  },
+  "session_user": {
+    "username": "luke",
+    "role": "admin"
+  },
+  "current_step": 42,
+  "workflow:sample_wf:session:wf_session_2233b3f45337": {
+    "workflow_id": "sample_wf",
+    "session_id": "wf_session_2233b3f45337",
+    "status": "success",
+    "inputs": {
+      "topic": "antigravity"
+    },
+    "step_states": {
+      "step_one": {
+        "status": "success",
+        "output": {
+          "output": {
+            "processed": "PROCESSED_VAL_ANTIGRAVITY"
+          }
+        }
+      },
+      "step_two": {
+        "status": "success",
+        "output": {
+          "status": "success",
+          "value": "PROCESSED_VAL_ANTIGRAVITY"
+        }
+      },
+      "step_three": {
+        "status": "success",
+        "output": {
+          "response": {
+            "msg": "Stored topic successfully"
+          }
+        }
+      }
+    },
+    "context": {
+      "inputs": {
+        "topic": "antigravity"
+      },
+      "step_one": {
+        "output": {
+          "processed": "PROCESSED_VAL_ANTIGRAVITY"
+        }
+      },
+      "step_two": {
+        "status": "success",
+        "value": "PROCESSED_VAL_ANTIGRAVITY"
+      },
+      "step_three": {
+        "response": {
+          "msg": "Stored topic successfully"
+        }
+      }
+    }
+  },
+  "saved_topic": "PROCESSED_VAL_ANTIGRAVITY",
+  "workflow:sample_wf:session:wf_session_88d9c2bec796": {
+    "workflow_id": "sample_wf",
+    "session_id": "wf_session_88d9c2bec796",
+    "status": "success",
+    "inputs": {
+      "topic": "antigravity"
+    },
+    "step_states": {
+      "step_one": {
+        "status": "success",
+        "output": {
+          "output": {
+            "processed": "PROCESSED_VAL_ANTIGRAVITY"
+          }
+        }
+      },
+      "step_two": {
+        "status": "success",
+        "output": {
+          "status": "success",
+          "value": "PROCESSED_VAL_ANTIGRAVITY"
+        }
+      },
+      "step_three": {
+        "status": "success",
+        "output": {
+          "response": {
+            "msg": "Stored topic successfully"
+          }
+        }
+      }
+    },
+    "context": {
+      "inputs": {
+        "topic": "antigravity"
+      },
+      "step_one": {
+        "output": {
+          "processed": "PROCESSED_VAL_ANTIGRAVITY"
+        }
+      },
+      "step_two": {
+        "status": "success",
+        "value": "PROCESSED_VAL_ANTIGRAVITY"
+      },
+      "step_three": {
+        "response": {
+          "msg": "Stored topic successfully"
+        }
+      }
+    }
+  },
+  "workflow:sample_wf:session:wf_session_65b55c21727e": {
+    "workflow_id": "sample_wf",
+    "session_id": "wf_session_65b55c21727e",
+    "status": "success",
+    "inputs": {
+      "topic": "antigravity"
+    },
+    "step_states": {
+      "step_one": {
+        "status": "success",
+        "output": {
+          "output": {
+            "processed": "PROCESSED_VAL_ANTIGRAVITY"
+          }
+        }
+      },
+      "step_two": {
+        "status": "success",
+        "output": {
+          "status": "success",
+          "value": "PROCESSED_VAL_ANTIGRAVITY"
+        }
+      },
+      "step_three": {
+        "status": "success",
+        "output": {
+          "response": {
+            "msg": "Stored topic successfully"
+          }
+        }
+      }
+    },
+    "context": {
+      "inputs": {
+        "topic": "antigravity"
+      },
+      "step_one": {
+        "output": {
+          "processed": "PROCESSED_VAL_ANTIGRAVITY"
+        }
+      },
+      "step_two": {
+        "status": "success",
+        "value": "PROCESSED_VAL_ANTIGRAVITY"
+      },
+      "step_three": {
+        "response": {
+          "msg": "Stored topic successfully"
+        }
+      }
+    }
+  }
 }

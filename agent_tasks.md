@@ -138,14 +138,14 @@ effort   : L
 depends  : 0-04
 ```
 
-- [ ] 設計 workflow 狀態機格式（states: pending / running / success / failed / skipped）
-- [ ] 在 `agent_runtime/` 新增 `workflow_engine.py`
-- [ ] 實作 `WorkflowEngine.load(workflow_id)` —— 從 `.agent/workflows/<id>.md` 載入定義
-- [ ] 實作 `WorkflowEngine.run(workflow_id, payload)` —— 依序執行步驟
-- [ ] 實作 `WorkflowEngine.resume(workflow_id, step_id)` —— 從中斷點繼續
-- [ ] 實作失敗步驟自動寫入 memory（不可靜默失敗）
-- [ ] 補充測試 `tests/test_workflow_engine.py`（含失敗路徑測試）
-- [ ] 新增範例 `examples/workflow_run_sample.py`
+- [x] 設計 workflow 狀態機格式（states: pending / running / success / failed / skipped）
+- [x] 在 `agent_runtime/` 新增 `workflow_engine.py`
+- [x] 實作 `WorkflowEngine.load(workflow_id)` —— 從 `.agent/workflows/<id>.md` 載入定義
+- [x] 實作 `WorkflowEngine.run(workflow_id, payload)` —— 依序執行步驟
+- [x] 實作 `WorkflowEngine.resume(workflow_id, step_id)` —— 從中斷點繼續
+- [x] 實作失敗步驟自動寫入 memory（不可靜默失敗）
+- [x] 補充測試 `tests/test_workflow_engine.py`（含失敗路徑測試）
+- [x] 新增範例 `examples/workflow_run_sample.py`
 
 ---
 
@@ -157,13 +157,13 @@ effort   : M
 depends  : 0-01
 ```
 
-- [ ] 建立 `.agent/knowledge_base/index.json`，記錄所有知識條目的 id、標題、路徑、標籤
-- [ ] 定義知識條目的 front matter 格式（`id`, `title`, `tags`, `created`, `updated`）
-- [ ] 為現有 `knowledge_base/` 下的所有文件補充 front matter
-- [ ] 在 `agent_runtime/` 新增 `knowledge.py`，實作 `KnowledgeBase.query(keyword)` 方法
-- [ ] 實作 `KnowledgeBase.get(id)` 方法，回傳單一知識條目
-- [ ] 補充測試 `tests/test_knowledge_base.py`
-- [ ] 知識庫唯讀保護：任何寫入操作需走 T-04 Protocol Evolution 流程
+- [x] 建立 `.agent/knowledge_base/index.json`，記錄所有知識條目的 id、標題、路徑、標籤
+- [x] 定義知識條目的 front matter 格式（`id`, `title`, `tags`, `created`, `updated`）
+- [x] 為現有 `knowledge_base/` 下的所有文件補充 front matter
+- [x] 在 `agent_runtime/` 新增 `knowledge.py`，實作 `KnowledgeBase.query(keyword)` 方法
+- [x] 實作 `KnowledgeBase.get(id)` 方法，回傳單一知識條目
+- [x] 補充測試 `tests/test_knowledge_base.py`
+- [x] 知識庫唯讀保護：任何寫入操作需走 T-04 Protocol Evolution 流程
 
 ---
 
@@ -175,12 +175,12 @@ effort   : M
 depends  : 0-01
 ```
 
-- [ ] 定義 prompt snippet 的結構格式（`id`, `template`, `variables`, `usage`, `version`）
-- [ ] 將 `.agent/prompts/` 下的文件轉換為符合新格式的 prompt contract
-- [ ] 在 `agent_runtime/` 新增 `prompt_composer.py`，實作 `PromptComposer.build(id, vars)` 方法
-- [ ] 加入 prompt injection 安全驗證（拒絕未經驗證的外部字串進入 system prompt）
-- [ ] 補充測試 `tests/test_prompt_composer.py`（含 injection 防護測試）
-- [ ] 新增範例 `examples/prompt_composition_sample.py`
+- [x] 定義 prompt snippet 的結構格式（`id`, `template`, `variables`, `usage`, `version`）
+- [x] 將 `.agent/prompts/` 下的文件轉換為符合新格式的 prompt contract
+- [x] 在 `agent_runtime/` 新增 `prompt_composer.py`，實作 `PromptComposer.build(id, vars)` 方法
+- [x] 加入 prompt injection 安全驗證（拒絕未經驗證的外部字串進入 system prompt）
+- [x] 補充測試 `tests/test_prompt_composer.py`（含 injection 防護測試）
+- [x] 新增範例 `examples/prompt_composition_sample.py`
 
 ---
 
@@ -192,13 +192,13 @@ effort   : M
 depends  : 0-02, 1-01
 ```
 
-- [ ] 設計 handoff packet 格式（task_state, pending_steps, context_summary, memory_snapshot）
-- [ ] 實作 `AgentEngine.export_handoff()` —— 產生 handoff packet 並寫入 `.agent/memory/handoff/`
-- [ ] 實作 `AgentEngine.import_handoff(handoff_id)` —— 讀取並還原 handoff 狀態
-- [ ] 加入 handoff packet 的完整性驗證（checksum 或 hash）
-- [ ] 補充測試 `tests/test_handoff.py`
-- [ ] 新增範例 `examples/handoff_export_import.py`
-- [ ] 在 `USAGE.md` 補充跨 agent 交接的使用說明
+- [x] 設計 handoff packet 格式（task_state, pending_steps, context_summary, memory_snapshot）
+- [x] 實作 `AgentEngine.export_handoff()` —— 產生 handoff packet 並寫入 `.agent/memory/handoff/`
+- [x] 實作 `AgentEngine.import_handoff(handoff_id)` —— 讀取並還原 handoff 狀態
+- [x] 加入 handoff packet 的完整性驗證（checksum 或 hash）
+- [x] 補充測試 `tests/test_handoff.py`
+- [x] 新增範例 `examples/handoff_export_import.py`
+- [x] 在 `USAGE.md` 補充跨 agent 交接的使用說明
 
 ---
 
@@ -210,12 +210,12 @@ effort   : S
 depends  : 0-01
 ```
 
-- [ ] 在 `spec/` 建立 `CHANGELOG.md`，從 v0.1.0 開始記錄
-- [ ] 定義版本號規則（major.minor.patch，破壞性變更需 major 遞增）
-- [ ] 在 `agent_runtime/engine.py` 加入版本相容性檢查（runtime version vs. manifest version）
-- [ ] 版本不相容時輸出明確警告，不直接報錯崩潰
-- [ ] 建立 `spec/migration/` 目錄，放置版本遷移指南
-- [ ] 補充測試 `tests/test_version_compat.py`
+- [x] 在 `spec/` 建立 `CHANGELOG.md`，從 v0.1.0 開始記錄
+- [x] 定義版本號規則（major.minor.patch，破壞性變更需 major 遞增）
+- [x] 在 `agent_runtime/engine.py` 加入版本相容性檢查（runtime version vs. manifest version）
+- [x] 版本不相容時輸出明確警告，不直接報錯崩潰
+- [x] 建立 `spec/migration/` 目錄，放置版本遷移指南
+- [x] 補充測試 `tests/test_version_compat.py`
 
 ---
 
@@ -229,13 +229,13 @@ effort   : M
 depends  : 0-05, 1-05
 ```
 
-- [ ] `cli.py` 加入 `init` 子指令：在任意專案目錄建立完整的 `.agent/` 骨架
-- [ ] init 流程詢問：project name、agent name、啟用的 skill 清單
-- [ ] init 自動產生：`agent.md`、`skills.md`、`prompts.md`、`memory.md`、`workflows.md`、`knowledge_base/`
-- [ ] init 產生的所有檔案都帶有正確的 YAML front matter 與 schema 版本
-- [ ] 加入 `--dry-run` 選項，只顯示會產生的檔案，不實際寫入
-- [ ] 補充測試 `tests/test_cli_init.py`
-- [ ] 更新 `USAGE.md` 和 `README.md`
+- [x] `cli.py` 加入 `init` 子指令：在任意專案目錄建立完整的 `.agent/` 骨架
+- [x] init 流程詢問：project name、agent name、啟用的 skill 清單
+- [x] init 自動產生：`agent.md`、`skills.md`、`prompts.md`、`memory.md`、`workflows.md`、`knowledge_base/`
+- [x] init 產生的所有檔案都帶有正確的 YAML front matter 與 schema 版本
+- [x] 加入 `--dry-run` 選項，只顯示會產生的檔案，不實際寫入
+- [x] 補充測試 `tests/test_cli_init.py`
+- [x] 更新 `USAGE.md` 和 `README.md`
 
 ---
 
@@ -247,11 +247,11 @@ effort   : M
 depends  : 0-01, 2-01
 ```
 
-- [ ] `cli.py` 加入 `lint` 子指令：檢查 `.agent/` 所有檔案的格式合規性
-- [ ] 檢查項目：schema 欄位完整性、版本號格式、skill contract 與 registry 一致性、workflow 步驟引用合法性
-- [ ] 輸出格式：每個問題顯示 severity（error / warning / info）、檔案路徑、行號（若適用）、修復建議
-- [ ] 加入 `--fix` 選項，自動修復可自動化處理的問題
-- [ ] 補充測試 `tests/test_cli_lint.py`
+- [x] `cli.py` 加入 `lint` 子指令：檢查 `.agent/` 所有檔案的格式合規性
+- [x] 檢查項目：schema 欄位完整性、版本號格式、skill contract 與 registry 一致性、workflow 步驟引用合法性
+- [x] 輸出格式：每個問題顯示 severity（error / warning / info）、檔案路徑、行號（若適用）、修復建議
+- [x] 加入 `--fix` 選項，自動修復可自動化處理的問題
+- [x] 補充測試 `tests/test_cli_lint.py`
 
 ---
 
@@ -263,12 +263,12 @@ effort   : L
 depends  : 0-01
 ```
 
-- [ ] 在 `spec/` 撰寫 `runtime-interface.md`：定義任何語言的 runtime 必須實作的介面
-- [ ] 必要介面清單：`load_manifest()`, `list_skills()`, `call_skill()`, `read_memory()`, `write_memory()`, `run_workflow()`
-- [ ] 為每個介面定義輸入/輸出的 JSON 格式
-- [ ] 撰寫 JavaScript/TypeScript reference implementation 的 stub（`spec/stubs/ts/`）
-- [ ] 撰寫 Go reference stub（`spec/stubs/go/`）
-- [ ] 確保 Python runtime 完全符合此規格文件
+- [x] 在 `spec/` 撰寫 `runtime-interface.md`：定義 any 語言的 runtime 必須實作的介面
+- [x] 必要介面清單：`load_manifest()`, `list_skills()`, `call_skill()`, `read_memory()`, `write_memory()`, `run_workflow()`
+- [x] 為每個介面定義輸入/輸出的 JSON 格式
+- [x] 撰寫 JavaScript/TypeScript reference implementation 的 stub（`spec/stubs/ts/`）
+- [x] 撰寫 Go reference stub（`spec/stubs/go/`）
+- [x] 確保 Python runtime 完全符合此規格文件
 
 ---
 
@@ -280,14 +280,14 @@ effort   : M
 depends  : 1-01, 1-02, 1-03
 ```
 
-- [ ] `examples/` 新增：`00_quickstart.py` —— 5 分鐘上手範例
-- [ ] `examples/` 新增：`01_skill_call.py` —— 完整的 skill 呼叫流程
-- [ ] `examples/` 新增：`02_memory_session.py` —— session 記憶讀寫
-- [ ] `examples/` 新增：`03_workflow_run.py` —— 執行一個多步驟 workflow
-- [ ] `examples/` 新增：`04_knowledge_query.py` —— 查詢知識庫
-- [ ] `examples/` 新增：`05_multi_agent.py` —— 模擬兩個 agent 交接任務
-- [ ] `examples/` 新增：`06_prompt_compose.py` —— 組裝 prompt 並注入變數
-- [ ] 每個範例都要能獨立執行，有完整的 inline 說明註解
+- [x] `examples/` 新增：`00_quickstart.py` —— 5 分鐘上手範例
+- [x] `examples/` 新增：`01_skill_call.py` —— 完整的 skill 呼叫流程
+- [x] `examples/` 新增：`02_memory_session.py` —— session 記憶讀寫
+- [x] `examples/` 新增：`03_workflow_run.py` —— 執行一個多步驟 workflow
+- [x] `examples/` 新增：`04_knowledge_query.py` —— 查詢知識庫
+- [x] `examples/` 新增：`05_multi_agent.py` —— 模擬兩個 agent 交接任務
+- [x] `examples/` 新增：`06_prompt_compose.py` —— 組裝 prompt 並注入變數
+- [x] 每個範例都要能獨立執行，有完整的 inline 說明註解
 
 ---
 
@@ -299,14 +299,14 @@ effort   : L
 depends  : 2-03, 2-04
 ```
 
-- [ ] 建立 `docs/` 目錄
-- [ ] `docs/getting-started.md` —— 安裝、init、第一個 skill call
-- [ ] `docs/protocol-spec.md` —— 完整協定規格（從 spec/ 整合）
-- [ ] `docs/skill-authoring.md` —— 如何撰寫 capability contract
-- [ ] `docs/memory-guide.md` —— memory 策略與最佳實踐
-- [ ] `docs/workflow-guide.md` —— workflow 設計模式
-- [ ] `docs/multi-agent.md` —— 多 agent 協作與 handoff 指南
-- [ ] `docs/migration/` —— 各版本遷移指南
+- [x] 建立 `docs/` 目錄
+- [x] `docs/getting-started.md` —— 安裝、init、第一個 skill call
+- [x] `docs/protocol-spec.md` —— 完整協定規格（從 spec/ 整合）
+- [x] `docs/skill-authoring.md` —— 如何撰寫 capability contract
+- [x] `docs/memory-guide.md` —— memory 策略與最佳實踐
+- [x] `docs/workflow-guide.md` —— workflow 設計模式
+- [x] `docs/multi-agent.md` —— 多 agent 協作與 handoff 指南
+- [x] `docs/migration/` —— 各版本遷移指南
 
 ---
 

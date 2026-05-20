@@ -87,55 +87,263 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="WORKFLOW_ID",
         help="Execute a multi-step workflow by ID and exit",
     )
+    parser.add_argument(
+        "--resume-session",
+        metavar="SESSION_ID",
+        help="Session ID to resume workflow from a checkpoint",
+    )
+    parser.add_argument(
+        "--resume-step",
+        metavar="STEP_ID",
+        help="Specific step ID to resume workflow from (optional, defaults to first failure/pending step)",
+    )
+    parser.add_argument(
+        "--query-knowledge",
+        metavar="KEYWORD",
+        help="Search knowledge base entries by keyword and exit",
+    )
+    parser.add_argument(
+        "--get-knowledge",
+        metavar="ENTRY_ID",
+        help="Retrieve a single knowledge base entry by ID and exit",
+    )
+    parser.add_argument(
+        "--export-handoff",
+        metavar="JSON",
+        help="Export handoff state. Argument is a JSON string containing: task_state, pending_steps, context_summary, optionally memory_keys and handoff_id",
+    )
+    parser.add_argument(
+        "--import-handoff",
+        metavar="HANDOFF_ID",
+        help="Import state from a handoff packet file and exit",
+    )
+    parser.add_argument(
+        "--project-name",
+        help="Project name for workspace initialization",
+    )
+    parser.add_argument(
+        "--agent-name",
+        help="Agent name for workspace initialization",
+    )
+    parser.add_argument(
+        "--skills",
+        help="Comma-separated list of initial skills to enable",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Only simulate workspace creation, do not write files",
+    )
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Automatically fix fixable lint issues",
+    )
     return parser
 
 
-def scaffold_workspace(base_dir: Path) -> None:
+
+def scaffold_workspace(
+    base_dir: Path,
+    project_name: str | None = None,
+    agent_name: str | None = None,
+    skills_list: list[str] | None = None,
+    dry_run: bool = False,
+) -> None:
     """Create a new .agent/ workspace with standard templates."""
+    import sys
+
+    # Prompt if interactive and values not provided
+    if not project_name:
+        if sys.stdin.isatty():
+            try:
+                project_name = input("Enter project name [my-project]: ").strip() or "my-project"
+            except (IOError, EOFError):
+                project_name = "my-project"
+        else:
+            project_name = "my-project"
+
+    if not agent_name:
+        if sys.stdin.isatty():
+            try:
+                agent_name = input("Enter agent name [my-agent]: ").strip() or "my-agent"
+            except (IOError, EOFError):
+                agent_name = "my-agent"
+        else:
+            agent_name = "my-agent"
+
+    if skills_list is None:
+        if sys.stdin.isatty():
+            try:
+                skills_input = input("Enter comma-separated skills to enable (e.g. search_web, query_db) []: ").strip()
+                skills_list = [s.strip() for s in skills_input.split(",") if s.strip()]
+            except (IOError, EOFError):
+                skills_list = []
+        else:
+            skills_list = []
+
     agent_dir = base_dir / ".agent"
-    agent_dir.mkdir(parents=True, exist_ok=True)
-    (agent_dir / "skills").mkdir(exist_ok=True)
-    (agent_dir / "prompts").mkdir(exist_ok=True)
-    (agent_dir / "workflows").mkdir(exist_ok=True)
-    (agent_dir / "memory").mkdir(exist_ok=True)
-    
-    agent_md = agent_dir / "agent.md"
-    if not agent_md.exists():
-        agent_md.write_text(
-            "---\n"
-            "protocol_version: \"1.0.0\"\n"
-            "min_runtime_version: \"0.1.0\"\n"
-            "name: new-agent\n"
-            "version: 0.1.0\n"
-            "purpose: Define the core purpose of this agent here.\n"
-            "language: en-US\n"
-            "authorization_level: interactive-approval\n"
-            "use_case_tags: [default-agent]\n"
-            "tools: []\n"
-            "---\n\n"
-            "# Agent Manifest\n"
-        )
-        print(f"Created {agent_md}")
-    
+
+    def _make_dir(d: Path) -> None:
+        if dry_run:
+            print(f"[Dry Run] Would create directory: {d}")
+        else:
+            d.mkdir(parents=True, exist_ok=True)
+            print(f"Created directory {d}")
+
+    def _write_file(f: Path, content: str) -> None:
+        if dry_run:
+            print(f"[Dry Run] Would create file: {f}")
+        else:
+            if not f.exists():
+                f.write_text(content, encoding="utf-8")
+                print(f"Created {f}")
+            else:
+                print(f"File already exists (skipped): {f}")
+
+    _make_dir(agent_dir)
+    _make_dir(agent_dir / "skills")
+    _make_dir(agent_dir / "prompts")
+    _make_dir(agent_dir / "workflows")
+    _make_dir(agent_dir / "memory")
+    _make_dir(agent_dir / "knowledge_base")
+
+    # 1. agent.md
+    agent_tools_yaml = ""
+    if skills_list:
+        agent_tools_yaml = "\ntools:\n" + "\n".join(f"  - {s}" for s in skills_list)
+    else:
+        agent_tools_yaml = "\ntools: []"
+
+    agent_md_content = f"""---
+protocol_version: "1.0.0"
+min_runtime_version: "0.1.0"
+name: "{agent_name}"
+version: "0.1.0"
+purpose: "Define the core purpose of this agent here."
+language: "en-US"
+authorization_level: "interactive-approval"
+use_case_tags: ["default-agent"]{agent_tools_yaml}
+protocol:
+  root: ".agent/"
+  manifest: ".agent/agent.md"
+  directories:
+    skills: ".agent/skills/"
+    workflows: ".agent/workflows/"
+memory:
+  backend: "local"
+  path: ".agent/memory/"
+---
+
+# Agent Manifest
+"""
+    _write_file(agent_dir / "agent.md", agent_md_content)
+
+    # 2. skills.md
+    skills_md_content = """---
+schema_version: "1.0.0"
+---
+
+# Skills Entry Point
+
+This file is the runtime-facing skill registry for the Portable Agent.
+Enable tools by adding them to the tools list in `agent.md`.
+"""
+    _write_file(agent_dir / "skills.md", skills_md_content)
+
+    # 3. prompts.md
+    prompts_md_content = """---
+schema_version: "1.0.0"
+---
+
+# Prompts Entry Point
+
+This file is the runtime-facing prompt catalog for the Portable Agent.
+"""
+    _write_file(agent_dir / "prompts.md", prompts_md_content)
+
+    # 4. memory.md
+    memory_md_content = """---
+schema_version: "1.0.0"
+---
+
+# Memory Contract
+
+This file defines the runtime-facing memory schema used by the Portable Agent.
+"""
+    _write_file(agent_dir / "memory.md", memory_md_content)
+
+    # 5. workflows.md
+    workflows_md_content = """---
+schema_version: "1.0.0"
+---
+
+# Workflow Registry
+
+This file is the canonical runtime-facing workflow registry for the Portable Agent.
+"""
+    _write_file(agent_dir / "workflows.md", workflows_md_content)
+
+    # 6. skill contracts for each declared skill
+    for skill_name in skills_list:
+        skill_file = agent_dir / "skills" / f"{skill_name}.md"
+        skill_content = f"""---
+id: "{skill_name}"
+name: "{skill_name}"
+description: "A placeholder description for {skill_name}."
+version: "1.0.0"
+inputs:
+  query:
+    type: "string"
+    description: "Search query or parameters."
+    required: true
+outputs:
+  result:
+    type: "string"
+    description: "The execution result."
+safety_notes: ["Safe to execute under interactive-approval."]
+---
+
+# {skill_name} Skill Contract
+
+Define execution instructions for the agent here.
+"""
+        _write_file(skill_file, skill_content)
+
+    # 7. template files
     skill_template = agent_dir / "skills" / "_template.md"
-    if not skill_template.exists():
-        skill_template.write_text(
-            "---\nname: \"{{skill_name}}\"\ndescription: \"\"\n---\n\n"
-            "# {{skill_name}}\n\n"
-            "## 1. Purpose\n\n## 2. Required Inputs\n\n## 3. Expected Outputs\n\n"
-            "## 4. Execution Boundaries & Safety\n\n## 5. Fallback Mechanism\n"
-        )
-        print(f"Created {skill_template}")
-        
+    skill_template_content = """---
+name: "{{skill_name}}"
+description: ""
+---
+
+# {{skill_name}}
+
+## 1. Purpose
+
+## 2. Required Inputs
+
+## 3. Expected Outputs
+
+## 4. Execution Boundaries & Safety
+
+## 5. Fallback Mechanism
+"""
+    _write_file(skill_template, skill_template_content)
+
     persona_template = agent_dir / "persona_template.md"
-    if not persona_template.exists():
-        persona_template.write_text(
-            "# PAP Persona Definition Template\n\n"
-            "## 1. Core Identity & Tone\n\n## 2. Prime Directives\n\n"
-            "## 3. Avoidance Rules\n\n## 4. Default Workflow\n"
-        )
-        print(f"Created {persona_template}")
-    
+    persona_template_content = """# PAP Persona Definition Template
+
+## 1. Core Identity & Tone
+
+## 2. Prime Directives
+
+## 3. Avoidance Rules
+
+## 4. Default Workflow
+"""
+    _write_file(persona_template, persona_template_content)
+
     print("PAP workspace scaffolded successfully!")
 
 
@@ -144,10 +352,65 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command and args.command[0] == "init":
-        scaffold_workspace(Path.cwd())
+        skills_list = None
+        if args.skills:
+            skills_list = [s.strip() for s in args.skills.split(",") if s.strip()]
+        scaffold_workspace(
+            base_dir=Path.cwd(),
+            project_name=args.project_name,
+            agent_name=args.agent_name,
+            skills_list=skills_list,
+            dry_run=args.dry_run,
+        )
         return 0
 
     config_path = Path(args.config)
+
+    # Handle lint subcommand
+    if args.command and args.command[0] == "lint":
+        from agent_runtime.lint import WorkspaceLinter
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+
+        linter = WorkspaceLinter(config_path)
+
+        if args.fix:
+            print("Applying automatic fixes...")
+            fixed_count = linter.apply_fixes()
+            print(f"Successfully applied {fixed_count} fixes.")
+            # Re-run checks to verify and display remaining issues
+            issues = linter.run_all_checks()
+        else:
+            issues = linter.run_all_checks()
+
+        if not issues:
+            print("No lint issues found. Your workspace is perfectly compliant!")
+            return 0
+
+        errors_count = 0
+        warnings_count = 0
+        info_count = 0
+
+        print(f"Linting results for {config_path.parent}:")
+        for issue in issues:
+            sev = issue.severity.upper()
+            line_info = f":{issue.line}" if issue.line is not None else ""
+            try:
+                rel_path = issue.file_path.relative_to(Path.cwd()) if issue.file_path.is_absolute() else issue.file_path
+            except ValueError:
+                rel_path = issue.file_path
+            sugg = f" (Suggestion: {issue.suggestion})" if issue.suggestion else ""
+            print(f"  [{sev}] {rel_path}{line_info} - {issue.message}{sugg}")
+            if issue.severity == "error":
+                errors_count += 1
+            elif issue.severity == "warning":
+                warnings_count += 1
+            else:
+                info_count += 1
+
+        print(f"\nSummary: found {errors_count} error(s), {warnings_count} warning(s), {info_count} info(s).")
+        return 1 if errors_count > 0 else 0
 
     # 1. Handle validation option or subcommand
     if args.validate or (args.command and args.command[0] == "validate"):
@@ -235,16 +498,53 @@ def main(argv: list[str] | None = None) -> int:
         except json.JSONDecodeError as exc:
             print(f"Error: invalid JSON for --params: {exc}", file=sys.stderr)
             return 1
-        print(f"Executing workflow '{args.run_workflow}'...")
         try:
-            result = engine.execute_workflow(args.run_workflow, params)
+            if args.resume_session:
+                print(f"Resuming workflow '{args.run_workflow}' for session '{args.resume_session}'...")
+                result = engine.resume_workflow(args.run_workflow, args.resume_session, args.resume_step)
+            else:
+                print(f"Executing workflow '{args.run_workflow}'...")
+                result = engine.execute_workflow(args.run_workflow, params)
             print(json.dumps(result, indent=2))
             return 0
         except Exception as exc:
             print(f"Workflow execution failed: {exc}", file=sys.stderr)
             return 1
 
-    # 7. Handle MCP synchronization
+    # 7. Handle knowledge base queries
+    if args.query_knowledge:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        results = engine.knowledge_base.query(args.query_knowledge)
+        if not results:
+            print(f"No knowledge entries found matching '{args.query_knowledge}'.")
+        else:
+            print(f"Found {len(results)} matching knowledge entries:")
+            for entry in results:
+                print(f"  - [{entry.get('id', '?')}] {entry.get('title', 'Untitled')}")
+                tags = entry.get('tags', [])
+                if tags:
+                    print(f"    Tags: {', '.join(tags)}")
+        return 0
+
+    # 8. Handle knowledge base get
+    if args.get_knowledge:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        entry = engine.knowledge_base.get(args.get_knowledge)
+        if entry is None:
+            print(f"Knowledge entry '{args.get_knowledge}' not found.", file=sys.stderr)
+            return 1
+        print(json.dumps({k: v for k, v in entry.items()}, indent=2))
+        return 0
+
+    # 9. Handle MCP synchronization
     if args.command and args.command[0] == "mcp" and len(args.command) > 1 and args.command[1] == "sync":
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
@@ -263,7 +563,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Done!")
         return 0
 
-    # 8. Handle PAP Hub packaging and cloning
+    # 10. Handle PAP Hub packaging and cloning
     if args.command and args.command[0] == "hub":
         if len(args.command) < 2:
             print("Error: 'hub' requires a subcommand ('pack' or 'clone').", file=sys.stderr)
@@ -320,7 +620,55 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Successfully cloned {repo_name} into .agent/")
             return 0
 
-    # 9. Handle default execution logic
+    # 11. Handle handoff export
+    if args.export_handoff:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        try:
+            payload = json.loads(args.export_handoff)
+        except json.JSONDecodeError as exc:
+            print(f"Error: invalid JSON for --export-handoff: {exc}", file=sys.stderr)
+            return 1
+
+        task_state = payload.get("task_state", "")
+        pending_steps = payload.get("pending_steps", [])
+        context_summary = payload.get("context_summary", "")
+        memory_keys = payload.get("memory_keys")
+        handoff_id = payload.get("handoff_id")
+
+        engine = AgentEngine(config_path=config_path)
+        try:
+            hid = engine.export_handoff(
+                task_state=task_state,
+                pending_steps=pending_steps,
+                context_summary=context_summary,
+                memory_keys=memory_keys,
+                handoff_id=handoff_id,
+            )
+            print(json.dumps({"success": True, "handoff_id": hid}))
+            return 0
+        except Exception as exc:
+            print(f"Handoff export failed: {exc}", file=sys.stderr)
+            return 1
+
+    # 12. Handle handoff import
+    if args.import_handoff:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path)
+        try:
+            packet = engine.import_handoff(args.import_handoff)
+            print(json.dumps({"success": True, "packet": packet}, indent=2))
+            return 0
+        except Exception as exc:
+            print(f"Handoff import failed: {exc}", file=sys.stderr)
+            return 1
+
+    # 13. Handle default execution logic
     if not config_path.exists():
         print(f"Error: config file not found: {config_path}", file=sys.stderr)
         return 1

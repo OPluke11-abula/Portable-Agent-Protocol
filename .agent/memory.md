@@ -1,3 +1,7 @@
+---
+schema_version: "1.0.0"
+---
+
 # Memory Entry Point
 
 This file defines the runtime-facing memory schema used by the Portable Agent.

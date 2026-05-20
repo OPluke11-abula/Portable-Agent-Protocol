@@ -91,16 +91,28 @@ spec/                              Protocol JSON Schema Definitions
   skill-contract.schema.json       JSON Schema for skill contracts
   memory.schema.json               JSON Schema for memory layouts
   workflow.schema.json             JSON Schema for workflows
+  knowledge.schema.json            JSON Schema for knowledge base entries
 
 agent_runtime/
   engine.py                        Runtime bootstrap and layout validation
   router.py                        Local, MCP, and Claude API dispatch
+  knowledge.py                     Read-only Knowledge Base query interface
 
   memory/
     __init__.py                    Memory backends
     writeback.py                   Skill execution writeback
 tests/                             Pytest coverage for runtime and integrations
 ```
+
+### Knowledge Base
+
+Durable project knowledge is stored in `.agent/knowledge_base/`. Each entry is
+a Markdown file with YAML front-matter (`id`, `title`, `tags`, `created`,
+`updated`) validated against `spec/knowledge.schema.json`. An `index.json`
+registry file catalogues all entries.
+
+The knowledge base is **read-only at runtime** — any mutation must go through
+the T-04 Protocol Evolution process.
 
 ## Protocol Schema Validation (`spec/`)
 
@@ -111,6 +123,7 @@ The schemas are defined under the `spec/` directory:
 - **[skill-contract.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/skill-contract.schema.json)**: Outlines capability contracts in `.agent/skills/*.md`.
 - **[memory.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/memory.schema.json)**: Formulates long-term, semantic, episodic, and handoff memory formats.
 - **[workflow.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/workflow.schema.json)**: Structures the steps and dependency graphs (DAG) in `.agent/workflows/*.md`.
+- **[knowledge.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/knowledge.schema.json)**: Validates front-matter metadata (`id`, `title`, `tags`, `created`, `updated`) for knowledge base entries.
 
 Runtimes validate these layouts automatically during bootstrap. You can trigger manual validation using the CLI:
 ```bash
@@ -139,11 +152,23 @@ pip install -e ".[dev]"
 The PAP reference CLI provides commands for workspace initialization, schema-enforced validations, skill discovery, memory operations, and workflow runs:
 
 ```bash
-# Initialize a new .agent/ workspace
+# Initialize a new .agent/ workspace (interactive)
 python cli.py init
+
+# Initialize with explicit flags (non-interactive)
+python cli.py init --project-name my-proj --agent-name my-agent --skills search_web,query_db
+
+# Dry-run mode (preview without writing)
+python cli.py init --project-name my-proj --agent-name my-agent --dry-run
 
 # Validate the local .agent/ layout and files against schemas
 python cli.py validate
+
+# Lint the workspace for schemas, versions, and workflow DAG/dependency consistency
+python cli.py lint
+
+# Auto-fix fixable issues
+python cli.py lint --fix
 
 # List all declared active skill contracts
 python cli.py --list-skills
@@ -160,6 +185,18 @@ python cli.py --run-workflow sample_workflow --params '{"arg": 123}'
 
 # Invoke a specific local tool directly
 python cli.py --tool search_web --params '{"query":"portable agents"}'
+
+# Search knowledge base entries by keyword
+python cli.py --query-knowledge "architecture"
+
+# Retrieve a specific knowledge base entry by ID
+python cli.py --get-knowledge api-docs
+
+# Export a signed cross-agent state handoff packet
+python cli.py --export-handoff '{"task_state": "Step A done", "pending_steps": ["Do Step B"], "context_summary": "Planning done", "memory_keys": ["data_key"], "handoff_id": "handoff-id"}'
+
+# Import and restore state from a handoff packet file
+python cli.py --import-handoff "handoff-id"
 ```
 
 
@@ -179,6 +216,13 @@ The memory package preserves the public import surface:
 from agent_runtime.memory import create_memory_backend
 from agent_runtime.memory.writeback import write_skill_result
 ```
+
+## Cross-Agent Handoff
+
+The Portable Agent Protocol includes a robust, schema-validated task handoff mechanism allowing state, context summaries, and memory snapshots to be serialized, signed with SHA-256 integrity checksums, and transferred between different agents cleanly.
+
+- **Export Handoff**: `engine.export_handoff(task_state, pending_steps, context_summary, memory_keys)` packages the state and creates a signed packet file under `.agent/memory/handoff/<handoff_id>.json`.
+- **Import Handoff**: `engine.import_handoff(handoff_id)` validates the packet integrity checksum, verifies the schema structure against `spec/memory.schema.json`, and restores the memory snapshot into the target engine's active memory backend.
 
 ## MCP Bridge
 

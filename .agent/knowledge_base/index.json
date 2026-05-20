@@ -1,0 +1,26 @@
+[
+  {
+    "id": "api-docs",
+    "title": "API Documentation Portal",
+    "path": ".agent/knowledge_base/api_docs.md",
+    "tags": [
+      "api",
+      "documentation",
+      "reference"
+    ],
+    "created": "2026-05-20",
+    "updated": "2026-05-20"
+  },
+  {
+    "id": "system-architecture",
+    "title": "System Architecture Portal",
+    "path": ".agent/knowledge_base/system_architecture.md",
+    "tags": [
+      "architecture",
+      "topology",
+      "design"
+    ],
+    "created": "2026-05-20",
+    "updated": "2026-05-20"
+  }
+]

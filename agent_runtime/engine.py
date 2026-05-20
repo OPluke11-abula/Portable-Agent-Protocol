@@ -22,6 +22,22 @@ logger = get_logger(__name__)
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 
+def parse_version(v_str: str) -> tuple[int, int, int]:
+    """Parse a semantic version string (e.g. 'v1.2.3', '0.1.0-alpha') into a numeric tuple."""
+    if v_str.startswith('v'):
+        v_str = v_str[1:]
+    parts = []
+    for p in v_str.split('.'):
+        match = re.match(r'^(\d+)', p)
+        if match:
+            parts.append(int(match.group(1)))
+        else:
+            parts.append(0)
+    while len(parts) < 3:
+        parts.append(0)
+    return (parts[0], parts[1], parts[2])
+
+
 def load_agent_config(agent_md: str | Path = ".agent/agent.md") -> dict[str, Any]:
     """Parse YAML front matter from *agent_md* and return it as a dict."""
     path = Path(agent_md)
@@ -238,11 +254,14 @@ def load_agent_layout(
 class AgentEngine:
     """Bootstraps the agent runtime from the protocol config."""
 
+    SUPPORTED_PROTOCOL_VERSION = "1.0.0"
+
     def __init__(self, config_path: str | Path = ".agent/agent.md") -> None:
         self.config_path = Path(config_path)
         self.config = load_agent_config(self.config_path)
         validate_agent_schema(self.config, self.config_path)
         validate_agent_config_paths(self.config, self.config_path)
+        self._check_version_compat()
         self.layout = load_agent_layout(self.config, self.config_path)
         
         # Resolve skills directory path
@@ -294,6 +313,17 @@ class AgentEngine:
             self.memory = create_memory_backend(backend_name, path=mem_path)
             self.memory_tiers["persistent"] = self.memory
 
+        # -- Knowledge Base ---------------------------------------------------
+        from .knowledge import KnowledgeBase
+
+        self.knowledge_base = KnowledgeBase(self)
+
+        # -- Prompt Composer --------------------------------------------------
+        from .prompt_composer import PromptComposer
+
+        self.prompt_composer = PromptComposer(self)
+
+
         logger.info(
             "AgentEngine initialised - name=%s version=%s tools=%s memory=%s",
             self.config.get("name"),
@@ -301,6 +331,40 @@ class AgentEngine:
             self.config.get("tools"),
             type(self.memory).__name__,
         )
+
+    def _check_version_compat(self) -> None:
+        """Check compatibility between runtime version and manifest versions, logging warnings if mismatched."""
+        from . import __version__ as runtime_version_str
+        
+        protocol_version_str = self.config.get("protocol_version", "1.0.0")
+        min_runtime_version_str = self.config.get("min_runtime_version", "0.1.0")
+
+        # 1. Compare min_runtime_version
+        try:
+            req_runtime = parse_version(min_runtime_version_str)
+            curr_runtime = parse_version(runtime_version_str)
+            if curr_runtime < req_runtime:
+                logger.warning(
+                    "The agent manifest requires minimum runtime version %s, but the current runtime is %s.",
+                    min_runtime_version_str,
+                    runtime_version_str
+                )
+        except Exception as e:
+            logger.debug("Failed to compare min_runtime_version: %s", e)
+
+        # 2. Compare protocol_version major mismatch
+        try:
+            req_protocol = parse_version(protocol_version_str)
+            supp_protocol = parse_version(self.SUPPORTED_PROTOCOL_VERSION)
+            if req_protocol[0] != supp_protocol[0]:
+                logger.warning(
+                    "The agent manifest uses protocol version %s, but the runtime supports protocol version %s. "
+                    "This major version difference may cause unexpected behavior.",
+                    protocol_version_str,
+                    self.SUPPORTED_PROTOCOL_VERSION
+                )
+        except Exception as e:
+            logger.debug("Failed to compare protocol_version: %s", e)
 
     # ------------------------------------------------------------------
     # Public API
@@ -316,7 +380,203 @@ class AgentEngine:
 
     def execute_workflow(self, workflow_name: str, inputs: dict[str, Any] | None = None) -> dict[str, Any]:
         """Load and execute a workflow DAG by its name."""
-        from .workflow import WorkflowExecutor
-        executor = WorkflowExecutor(self)
-        dag = executor.load(workflow_name)
-        return executor.run(dag, inputs or {})
+        from .workflow_engine import WorkflowEngine
+        engine = WorkflowEngine(self)
+        return engine.run(workflow_name, inputs or {})
+
+    def resume_workflow(
+        self,
+        workflow_name: str,
+        session_id: str,
+        step_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Resume a workflow session from a designated checkpoint step."""
+        from .workflow_engine import WorkflowEngine
+        engine = WorkflowEngine(self)
+        return engine.resume(workflow_name, session_id, step_id)
+
+    def export_handoff(
+        self,
+        task_state: str,
+        pending_steps: list[str],
+        context_summary: str,
+        memory_keys: list[str] | None = None,
+        handoff_id: str | None = None,
+    ) -> str:
+        """Export the current context, pending tasks, and selected memory snapshot as a handoff packet.
+
+        The packet will be signed with a SHA-256 integrity checksum and stored as a JSON
+        contract under the designated handoff directory (.agent/memory/handoff/<handoff_id>.json).
+
+        Parameters
+        ----------
+        task_state : str
+            A description of the current task state.
+        pending_steps : list[str]
+            A list of pending steps or tasks to be executed by the next agent.
+        context_summary : str
+            A descriptive summary of context, objectives, and progress so far.
+        memory_keys : list[str], optional
+            A whitelist of memory keys to snapshot. If None, snapshot all keys.
+        handoff_id : str, optional
+            A custom handoff identifier. If None, a random UUID v4 will be generated.
+
+        Returns
+        -------
+        str
+            The handoff_id.
+        """
+        import uuid
+        import hashlib
+        import json
+
+        if not handoff_id:
+            handoff_id = str(uuid.uuid4())
+
+        # Resolve memory snapshot
+        memory_snapshot = {}
+        if memory_keys is not None:
+            for k in memory_keys:
+                val = self.memory.read(k)
+                if val is not None:
+                    memory_snapshot[k] = val
+        else:
+            # If no keys specified, read all keys
+            for k in self.memory.list_keys():
+                val = self.memory.read(k)
+                if val is not None:
+                    memory_snapshot[k] = val
+
+        # Construct packet
+        packet = {
+            "task_state": task_state,
+            "pending_steps": pending_steps,
+            "context_summary": context_summary,
+            "memory_snapshot": memory_snapshot,
+        }
+
+        # Calculate integrity checksum
+        canonical = json.dumps(packet, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+        checksum = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        packet["checksum"] = checksum
+
+        # Validate against schema if jsonschema is available
+        schema_path = self.config_path.parent.parent / "spec" / "memory.schema.json"
+        if schema_path.exists():
+            try:
+                import jsonschema
+                with schema_path.open(encoding="utf-8") as f:
+                    schema = json.load(f)
+                jsonschema.validate(instance={"handoff": packet}, schema=schema)
+            except ImportError:
+                pass
+            except Exception as e:
+                logger.warning("Handoff packet failed schema validation before export: %s", e)
+
+        # Resolve handoff directory
+        handoff_dir = None
+        if isinstance(self.layout, dict):
+            mem_dir = self.layout.get("directories", {}).get("memory")
+            if mem_dir:
+                handoff_dir = Path(mem_dir) / "handoff"
+        if handoff_dir is None:
+            handoff_dir = self.config_path.parent / "memory" / "handoff"
+
+        handoff_dir = Path(handoff_dir)
+        handoff_dir.mkdir(parents=True, exist_ok=True)
+
+        dest_file = handoff_dir / f"{handoff_id}.json"
+        try:
+            dest_file.write_text(json.dumps(packet, indent=2, ensure_ascii=False), encoding="utf-8")
+            logger.info("Exported handoff packet to %s", dest_file)
+        except OSError as e:
+            raise OSError(f"Failed to write handoff packet to {dest_file}: {e}") from e
+
+        return handoff_id
+
+    def import_handoff(self, handoff_id: str) -> dict[str, Any]:
+        """Import, verify, and restore state from a designated handoff packet.
+
+        The handoff packet's integrity checksum is validated, and the memory snapshot
+        is restored into the current memory backend.
+
+        Parameters
+        ----------
+        handoff_id : str
+            The identifier of the handoff to import.
+
+        Returns
+        -------
+        dict[str, Any]
+            The imported handoff packet structure.
+        """
+        import hashlib
+        import json
+
+        # Resolve handoff directory
+        handoff_dir = None
+        if isinstance(self.layout, dict):
+            mem_dir = self.layout.get("directories", {}).get("memory")
+            if mem_dir:
+                handoff_dir = Path(mem_dir) / "handoff"
+        if handoff_dir is None:
+            handoff_dir = self.config_path.parent / "memory" / "handoff"
+
+        handoff_dir = Path(handoff_dir)
+        src_file = handoff_dir / f"{handoff_id}.json"
+
+        if not src_file.exists():
+            # Fall back to root directory relative check
+            project_root = self.config_path.parent.parent
+            src_file_alt = project_root / ".agent" / "memory" / "handoff" / f"{handoff_id}.json"
+            if src_file_alt.exists():
+                src_file = src_file_alt
+            else:
+                raise FileNotFoundError(f"Handoff file not found at: {src_file}")
+
+        try:
+            packet = json.loads(src_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            raise ValueError(f"Failed to read/parse handoff JSON: {e}") from e
+
+        # Extract and verify checksum
+        checksum = packet.pop("checksum", None)
+        if not checksum:
+            raise ValueError("Integrity verification failed: missing checksum in handoff packet.")
+
+        canonical = json.dumps(packet, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+        expected_checksum = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+        if checksum != expected_checksum:
+            raise ValueError(
+                f"Handoff packet integrity check failed! Mismatch:\n"
+                f"  Expected: {expected_checksum}\n"
+                f"  Got:      {checksum}"
+            )
+
+        # Validate schema
+        schema_path = self.config_path.parent.parent / "spec" / "memory.schema.json"
+        if schema_path.exists():
+            try:
+                import jsonschema
+                with schema_path.open(encoding="utf-8") as f:
+                    schema = json.load(f)
+                packet_to_validate = dict(packet)
+                packet_to_validate["checksum"] = checksum
+                jsonschema.validate(instance={"handoff": packet_to_validate}, schema=schema)
+            except ImportError:
+                pass
+            except Exception as e:
+                raise ValueError(f"Handoff packet failed schema validation on import: {e}") from e
+
+        # Restore memory snapshot
+        memory_snapshot = packet.get("memory_snapshot", {})
+        for k, v in memory_snapshot.items():
+            self.memory.write(k, v)
+
+        # Re-inject checksum back to return packet
+        packet["checksum"] = checksum
+
+        logger.info("Successfully imported handoff state from %s", src_file)
+        return packet
+

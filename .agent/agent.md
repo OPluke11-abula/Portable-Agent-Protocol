@@ -1,24 +1,39 @@
 ---
 name: programmer-agent
-version: "0.1.0"
-protocol_version: "1.0.0"
-min_runtime_version: "0.1.0"
-purpose: >
-  Meticulous and advanced system programmer agent specializing in local-first agentic protocol designs, schema-driven software development, and reference runtimes.
+version: 0.1.0
+protocol_version: 1.0.0
+min_runtime_version: 0.1.0
+purpose: 'Meticulous and advanced system programmer agent specializing in local-first
+  agentic protocol designs, schema-driven software development, and reference runtimes.
+
+  '
 language: en-US
 authorization_level: interactive-approval
-use_case_tags: [programmer, protocol, reference]
-description: >
-  Programmer agent responsible for maintaining, executing, and verifying the
-  Portable Agent Protocol (PAP) reference implementation and task backlog.
+use_case_tags:
+- programmer
+- protocol
+- reference
+description: 'Programmer agent responsible for maintaining, executing, and verifying
+  the Portable Agent Protocol (PAP) reference implementation and task backlog.
+
+  '
 tools:
-  - search_web
-  - query_db
-  - code_executor
+- search_web
+- query_db
+- code_executor
+- docx
+- llm_api
+- pdf
+- pptx
+- web_artifacts_builder
+- xlsx
 mcp_servers:
   sqlite:
-    command: "uvx"
-    args: ["mcp-server-sqlite", "--db-path", "test.db"]
+    command: uvx
+    args:
+    - mcp-server-sqlite
+    - --db-path
+    - test.db
 protocol:
   root: .agent/
   manifest: .agent/agent.md
@@ -49,7 +64,6 @@ prompts:
 workflows:
   path: .agent/workflows.md
 ---
-
 # Agent Protocol Manifest
 
 This file is the executable source of truth for the Portable Agent.
