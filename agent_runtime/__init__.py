@@ -2,6 +2,7 @@
 
 __all__ = [
     "AgentEngine",
+    "HandoffRequired",
     "Router",
     "get_logger",
     "load_agent_config",
@@ -20,17 +21,23 @@ __all__ = [
     "PromptComposer",
     "SafePromptString",
     "validate_prompt_string",
+    "ToolManifest",
 ]
 __version__ = "0.1.0"
 
 
 def __getattr__(name: str):
     """Lazily expose runtime symbols without forcing optional imports."""
-    if name in {"AgentEngine", "load_agent_config", "load_agent_layout"}:
-        from .engine import AgentEngine, load_agent_config, load_agent_layout
+    if name == "ToolManifest":
+        from .tool_manifest import ToolManifest
+        return ToolManifest
+
+    if name in {"AgentEngine", "HandoffRequired", "load_agent_config", "load_agent_layout"}:
+        from .engine import AgentEngine, HandoffRequired, load_agent_config, load_agent_layout
 
         values = {
             "AgentEngine": AgentEngine,
+            "HandoffRequired": HandoffRequired,
             "load_agent_config": load_agent_config,
             "load_agent_layout": load_agent_layout,
         }

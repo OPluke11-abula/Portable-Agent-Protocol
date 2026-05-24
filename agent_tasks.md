@@ -128,6 +128,35 @@ depends  : 0-03
 
 ---
 
+### 0-07 Onboarding 順序性與強制性校驗 (Strict Onboarding Verifier)
+
+```
+priority : HIGH
+status   : [x] done
+effort   : S
+depends  : 0-00
+```
+
+- [x] 在 `AgentEngine` 初始化階段實作 Onboarding 順序校驗機制
+- [x] 追蹤 episodic memory，強制檢查 `agent.md ➔ skills.md ➔ agent_tasks.md ➔ handoff_guide.md` 讀取鏈
+- [x] 未完成 onboarding 前，限制其他 tool/skill 調用，確保認知對齊
+
+---
+
+### 0-08 實作 tool_manifest.py 整合與全局技能屏蔽機制
+
+```
+priority : MEDIUM
+effort   : S
+depends  : 0-03
+```
+
+- [x] 撰寫 `agent_runtime/tool_manifest.py` 定義 Local/Global 技能清單
+- [x] 在 `cli.py lint` 與 `pytest` 執行本地一致性校驗時自動屏蔽/忽略全局技能（如 `pdf`, `xlsx`）
+- [x] 確保本地專案部署驗證 100% 通過，不因缺乏全局依賴而失敗
+
+---
+
 ## PHASE 1 — Protocol Completeness / 協定完整性
 
 ### 1-01 Workflow 引擎實作
@@ -216,6 +245,62 @@ depends  : 0-01
 - [x] 版本不相容時輸出明確警告，不直接報錯崩潰
 - [x] 建立 `spec/migration/` 目錄，放置版本遷移指南
 - [x] 補充測試 `tests/test_version_compat.py`
+
+---
+
+### 1-06 跨層級技能尋址與覆蓋機制 (Layered Skill Pipeline)
+
+```
+priority : HIGH
+effort   : M
+depends  : 0-03
+```
+
+- [x] 在 `Router` 實作本地 `.agent/skills/` 與全局 `~/.gemini/antigravity/skills/` 的雙層尋址鏈
+- [x] 支援專案本地技能合約直接覆蓋同名全域技能
+- [x] 補充層級覆蓋與 fallback 機制的單元測試
+
+---
+
+### 1-07 命令行工作流斷點續傳支援 (Checkpoint-based Resume in CLI)
+
+```
+priority : HIGH
+effort   : S
+depends  : 1-01
+```
+
+- [x] 在 `cli.py` 新增 `--resume-workflow <session_id> [--step <step_id>]` 參數
+- [x] 實作讀取 `runs/<session_id>.json` 狀態並自動恢復工作流執行
+- [x] 補充 CLI 斷點恢復與重試機制的整合測試
+
+---
+
+### 1-08 自動化 Token 溢出偵測與交接觸發器 (Auto Thread-Hopping Trigger)
+
+```
+priority : HIGH
+effort   : M
+depends  : 1-04
+```
+
+- [x] 在 `AgentEngine` 核心實作轉數（Turn-count）與 Context 長度計量追蹤
+- [x] 當累計 Token 超過 32k 或轉數超限時，自動攔截並執行 `export_handoff()`
+- [x] 拋出 `HandoffRequired` 例外，並以特定 Exit Code 退出，通知 Host 重啟乾淨線程
+
+---
+
+### 1-09 工作流實體檔案 Checkpoint 匯出器 (Workflow File Checkpoint Exporter)
+
+```
+priority : MEDIUM
+effort   : S
+depends  : 1-01
+```
+
+- [x] 在 `WorkflowEngine._save_session` 中，自動在本地產生 `runs/<session_id>.json` 檔案
+- [x] 提供視覺化或外部系統直讀工作流 DAG 步驟狀態的管道
+- [x] 確保非破壞性恢復（--resume）能安全解析 runs 目錄下的實體 JSON 狀態
 
 ---
 
@@ -310,23 +395,39 @@ depends  : 2-03, 2-04
 
 ---
 
+### 2-06 腦手分離合規性靜態檢查 (Decoupling Static Linter)
+
+```
+priority : HIGH
+status   : [x] done
+effort   : M
+depends  : 2-02
+```
+
+- [x] 在 `cli.py lint` 實作腦手分離合規性靜態掃描
+- [x] 自動驗證 `.agent/knowledge_base/` 僅包含宣告式架構/SOP，無 hardcoded 代碼或工具實現
+- [x] 自動驗證 `agent_runtime/tools/` 與 `skills/` 為無狀態，無硬編碼的業務領域邏輯
+
+---
+
 ## PHASE 3 — Quality & Security / 品質與安全
 
 ### 3-01 測試覆蓋率提升
 
 ```
 priority : HIGH
+status   : [x] done
 effort   : M
 depends  : PHASE 0, PHASE 1
 ```
 
-- [ ] 設定測試覆蓋率目標：核心 runtime 80% 以上
-- [ ] 補充 `tests/test_engine.py`：涵蓋邊界條件（缺少欄位、格式錯誤、版本不符）
-- [ ] 補充 `tests/test_router.py`：涵蓋不存在的 skill、參數型別錯誤
-- [ ] 補充 `tests/test_memory.py`：涵蓋 scope 隔離、大量資料、concurrent write
-- [ ] 加入整合測試 `tests/integration/`：模擬完整的 session 流程
-- [ ] 在 `pyproject.toml` 加入覆蓋率設定（pytest-cov）
-- [ ] CI 設定：覆蓋率低於門檻時 fail
+- [x] 設定測試覆蓋率目標：核心 runtime 80% 以上
+- [x] 補充 `tests/test_engine.py`：涵蓋邊界條件（缺少欄位、格式錯誤、版本不符）
+- [x] 補充 `tests/test_router.py`：涵蓋不存在的 skill、參數型別錯誤
+- [x] 補充 `tests/test_memory.py`：涵蓋 scope 隔離、大量資料、concurrent write
+- [x] 加入整合測試 `tests/integration/`：模擬完整的 session 流程
+- [x] 在 `pyproject.toml` 加入覆蓋率設定（pytest-cov）
+- [x] CI 設定：覆蓋率低於門檻時 fail
 
 ---
 
@@ -376,6 +477,33 @@ depends  : PHASE 1
 - [ ] 區分 runtime 必要依賴 vs. dev 依賴
 - [ ] 確認 core runtime（無 dev 依賴）可在純 Python 標準函式庫下運作
 - [ ] 若需要第三方套件，在 `spec/` 中說明理由
+
+---
+
+### 3-05 Token 審計、實時計費與自動容災 (Token Auditing & Auto-Failover)
+
+```
+priority : HIGH
+effort   : L
+depends  : PHASE 1
+```
+
+- [ ] 實作執行緒安全的 `accounts.json` 多帳戶管理結構與併發鎖
+- [ ] 在 LLM Provider Callbacks 實作實時計費與 token (prompt/completion/total) 統計
+- [ ] 實作 Auto-Failover 機制：呼叫前判斷剩餘額度，超限時自動切換至下一個可用帳戶
+
+---
+
+### 3-06 Schema 嚴格校驗層 (Strict Schema Validation Layer)
+
+```
+priority : MEDIUM
+effort   : S
+depends  : 2-02
+```
+
+- [ ] 導入 `pydantic` 或等效函式庫，對所有 YAML 轉入的 Dict 執行強型別約束
+- [ ] 針對 `skill.json` 與 `workflow.json` 實作 Schema 靜態驗證器
 
 ---
 
@@ -481,13 +609,13 @@ depends  : 0-03, 5-01
 
 | Phase | 任務數 | 預估規模 |
 |-------|--------|----------|
-| PHASE 0 Foundation | 5 tasks, 32 items | 基礎，優先完成 |
-| PHASE 1 Protocol | 5 tasks, 37 items | 核心功能 |
-| PHASE 2 DX | 5 tasks, 33 items | 開發者體驗 |
-| PHASE 3 Quality | 4 tasks, 23 items | 品質保證 |
+| PHASE 0 Foundation | 7 tasks, 38 items | 基礎，優先完成 |
+| PHASE 1 Protocol | 9 tasks, 49 items | 核心功能 |
+| PHASE 2 DX | 6 tasks, 36 items | 開發者體驗 |
+| PHASE 3 Quality | 5 tasks, 26 items | 品質保證 |
 | PHASE 4 Ecosystem | 3 tasks, 16 items | 生態建設 |
 | PHASE 5 Self-Evolution | 3 tasks, 12 items | 長期目標 |
-| **Total** | **25 tasks** | **153 items** |
+| **Total** | **33 tasks** | **177 items** |
 
 ---
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import textwrap
+from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 from typing import Any
@@ -19,6 +21,7 @@ from agent_runtime.memory import (
     SQLiteBackend,
     create_memory_backend,
 )
+from agent_runtime.engine import AgentEngine
 
 
 def test_memory_directories_and_readmes() -> None:
@@ -179,3 +182,93 @@ def test_memory_backends_query_method(tmp_path: Path) -> None:
     assert len(results) == 1
     assert results[0]["key"] == "db_key"
     assert results[0]["value"] == "sqlite_val"
+
+
+def test_engine_memory_tiers_keep_scope_isolated(tmp_path: Path) -> None:
+    """Tiered memory backends do not leak keys across runtime scopes."""
+    agent_dir = tmp_path / ".agent"
+    for child in ("skills", "workflows", "memory", "knowledge_base"):
+        (agent_dir / child).mkdir(parents=True, exist_ok=True)
+
+    memory_path = (agent_dir / "memory").as_posix()
+    config = textwrap.dedent(
+        f"""\
+        ---
+        protocol_version: "1.0.0"
+        min_runtime_version: "0.1.0"
+        name: memory-tier-agent
+        version: "0.1.0"
+        purpose: Verify memory tier isolation.
+        language: en-US
+        authorization_level: interactive-approval
+        use_case_tags: [test]
+        tools: []
+        protocol:
+          root: .agent/
+          manifest: .agent/agent.md
+          directories:
+            skills: .agent/skills/
+            workflows: .agent/workflows/
+            memory: .agent/memory/
+            knowledge_base: .agent/knowledge_base/
+        memory:
+          tiers:
+            ephemeral: in_memory
+            session: in_memory
+            persistent: local
+          path: "{memory_path}"
+        ---
+        # Memory Tier Agent
+        """
+    )
+    config_path = agent_dir / "agent.md"
+    config_path.write_text(config, encoding="utf-8")
+
+    engine = AgentEngine(config_path)
+    engine.memory_tiers["ephemeral"].write("scope", "ephemeral")
+    engine.memory_tiers["session"].write("scope", "session")
+    engine.memory_tiers["persistent"].write("scope", "persistent")
+
+    assert engine.memory_tiers["ephemeral"].read("scope") == "ephemeral"
+    assert engine.memory_tiers["session"].read("scope") == "session"
+    assert engine.memory_tiers["persistent"].read("scope") == "persistent"
+    assert engine.memory.read("scope") == "persistent"
+    assert engine.memory_tiers["ephemeral"].list_keys() == ["scope"]
+    assert engine.memory_tiers["session"].list_keys() == ["scope"]
+
+
+def test_json_memory_backend_concurrent_writes_preserve_all_keys(tmp_path: Path) -> None:
+    """A shared JSON backend instance serializes concurrent read/write access."""
+    backend = JSONFileBackend(tmp_path / "memory")
+
+    def write_entry(index: int) -> None:
+        key = f"entry-{index:03d}"
+        backend.write(key, {"index": index})
+        assert backend.read(key) == {"index": index}
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(write_entry, range(64)))
+
+    assert len(backend.list_keys()) == 64
+    assert backend.read("entry-000") == {"index": 0}
+    assert backend.read("entry-063") == {"index": 63}
+
+
+def test_sqlite_memory_backend_handles_large_data_volume(tmp_path: Path) -> None:
+    """The durable SQLite backend remains queryable with hundreds of records."""
+    backend = SQLiteBackend(db_path=tmp_path / "memory.db")
+
+    for index in range(500):
+        backend.write(
+            f"entry-{index:03d}",
+            {"index": index, "payload": "x" * 128},
+        )
+
+    assert len(backend.list_keys()) == 500
+    assert backend.read("entry-499") == {"index": 499, "payload": "x" * 128}
+
+    matches = backend.search("entry-49", top_k=20)
+    assert len(matches) == 10
+    assert {match["key"] for match in matches} == {
+        f"entry-49{suffix}" for suffix in range(10)
+    }

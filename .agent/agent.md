@@ -44,6 +44,8 @@ protocol:
     memory: .agent/memory.md
     workflows: .agent/workflows.md
     tasks: agent_tasks.md
+    routing: .agent/routing.md
+    handoff: .agent/handoff_guide.md
   directories:
     core: .agent/core/
     skills: .agent/skills/
@@ -66,34 +68,24 @@ workflows:
 ---
 # Agent Protocol Manifest
 
-This file is the executable source of truth for the Portable Agent.
-The current Python reference runtime reads the YAML front matter above.
+This file is the executable source of truth for the Portable Agent, incorporating the FindAi Studio **LAS Cross-Project Best Practice** and "Brain & Hands" Decoupling architecture.
 
-## Layout Model
+## Layout Model (Three-Tier Manifest)
 
-- `agent.md`: executable manifest and runtime-declared layout
-- top-level `.agent/*.md` entry documents: runtime-facing registries and
-  contracts
-- `.agent/*/` subdirectories: detailed specs, policies, and reusable templates
+1. **Layer 1: Executable Manifest (`agent.md`)**: Defines metadata, mounted MCP servers, active tools, local memory tiers, and executive routing layout.
+2. **Layer 2: Runtime Entry Documents (`.agent/*.md`)**: Stable entrypoints for skills (`skills.md`), prompts (`prompts.md`), memory (`memory.md`), workflows (`workflows.md`), situation routing (`routing.md`), and handoff specifications (`handoff_guide.md`).
+3. **Layer 3: Detailed Protocol Directories (`.agent/*/`)**: Hold detailed capability contracts, template fragments, historical memory snapshots, durable declarative domain knowledge, and execution specifications.
 
-## Runtime Responsibilities
+## 🛡️ Executive Routing & Hard Rules (最高指導原則與硬限制)
 
-- Route natural-language or structured requests to the right tool
-- Maintain local memory state for context persistence
-- Validate and discover the declared `.agent/` protocol layout
-- Load prompt snippets from `.agent/prompts.md`
-- Execute workflows defined in `.agent/workflows.md`
-
-## Read Order
-
-1. Read this file first
-2. Read `.agent/README.md` for the three-layer architecture
-3. Read the relevant top-level entry document
-4. Read task-specific leaf docs from the matching subdirectory
-
-## Merge Rule
-
-When runtime-level configuration and protocol documentation overlap, preserve
-the YAML front matter in this file as the executable source of truth. The
-top-level entry documents define runtime-facing contracts, and the subdirectory
-documents provide deeper guidance and templates.
+1. **Brain & Hands Decoupling**: Reason utilizing declarative frameworks inside `.agent/knowledge_base/` ("Brain") and execute with stateless reflected Python tools in `agent_runtime/tools/` or custom skills in `.agent/skills/` ("Hands").
+2. **Deterministic Routing**: Every incoming request must be routed utilizing the [Situation-to-Skill Selection Rules](file:///d:/GitHub/Portable-Agent-Protocol/.agent/routing.md).
+3. **Thread-Hopping Execution**: If the conversation context is bloated or turn-count exceeds 15, immediately trigger [Thread-Hopping Protocol](file:///d:/GitHub/Portable-Agent-Protocol/.agent/handoff_guide.md) to preserve token budget.
+4. **Onboarding Read Order**: Newly active agents must ingest documents in this strict order:
+   $$\text{agent.md} \quad \rightarrow \quad \text{skills.md} \quad \rightarrow \quad \text{agent\_tasks.md} \quad \rightarrow \quad \text{handoff\_guide.md}$$
+5. **Strict 5-Step Work Principles**:
+   - **Clean Code**: Remove debug outputs and wrap async operations in try-except blocks.
+   - **Service Boundaries**: Decouple core engine, adapters, and tools.
+   - **Self-Manifest Update**: Mark completed items in `agent_tasks.md` and document logs.
+   - **Bilingual Documentation**: Synchronize English and Chinese sections in `README.md`.
+   - **Pre-commit pytest validation**: Always execute pytest suite (`python -m pytest`) to ensure 100% green status before staging and committing.

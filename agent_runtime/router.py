@@ -8,7 +8,7 @@ import os
 import re
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -32,8 +32,11 @@ class Router:
         tools: list[str] | None = None,
         mcp_servers: dict[str, Any] | None = None,
         skills_dir: str | Path | None = None,
+        onboarding_guard: Callable[[], None] | None = None,
+        tool_manifest: Any | None = None,
     ) -> None:
         self._registry: dict[str, Any] = {}
+        self._onboarding_guard = onboarding_guard
         for name in tools or []:
             self._register(name)
             
@@ -46,6 +49,12 @@ class Router:
             self._skills_dir = Path(skills_dir)
         else:
             self._skills_dir = Path(".agent/skills")
+
+        from .tool_manifest import ToolManifest
+        if tool_manifest is not None:
+            self._tool_manifest = tool_manifest
+        else:
+            self._tool_manifest = ToolManifest(local_skills_dir=self._skills_dir)
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -69,12 +78,21 @@ class Router:
         self._registry[name] = handler
         logger.debug("Registered in-process tool: %s", name)
 
+    def set_onboarding_guard(self, guard: Callable[[], None] | None) -> None:
+        """Set a runtime guard that must pass before dispatching any tool."""
+        self._onboarding_guard = guard
+
     def _load_contract(self, skill_id: str) -> dict[str, Any] | None:
         """Loads and parses the YAML front-matter of the skill contract for ``skill_id``."""
-        if not self._skills_dir:
-            return None
+        contract_path = None
+        if hasattr(self, "_tool_manifest") and self._tool_manifest is not None:
+            contract_path = self._tool_manifest.get_skill_contract_path(skill_id)
 
-        contract_path = self._skills_dir / f"{skill_id}.md"
+        if not contract_path:
+            if not self._skills_dir:
+                return None
+            contract_path = self._skills_dir / f"{skill_id}.md"
+
         if not contract_path.exists():
             return None
 
@@ -84,7 +102,24 @@ class Router:
             if not match:
                 logger.warning("No YAML front-matter found in skill contract: %s", contract_path)
                 return None
-            return yaml.safe_load(match.group(1)) or {}
+            data = yaml.safe_load(match.group(1)) or {}
+            if not isinstance(data, dict):
+                data = {}
+            if not data.get("id"):
+                data["id"] = skill_id
+            if not data.get("name"):
+                data["name"] = data["id"]
+            if data.get("description") is None:
+                data["description"] = ""
+            if not data.get("version"):
+                data["version"] = "1.0.0"
+            if data.get("inputs") is None:
+                data["inputs"] = {}
+            if data.get("outputs") is None:
+                data["outputs"] = {}
+            if data.get("safety_notes") is None:
+                data["safety_notes"] = []
+            return data
         except Exception as exc:
             logger.warning("Error reading skill contract %s: %s", contract_path, exc)
             return None
@@ -101,13 +136,18 @@ class Router:
     def list_skills(self) -> list[dict[str, Any]]:
         """Returns a list of structured skill contracts for all active skills in the skills directory."""
         skills = []
-        if not self._skills_dir or not self._skills_dir.exists():
-            return skills
+        skill_ids = set()
+        if hasattr(self, "_tool_manifest") and self._tool_manifest is not None:
+            for skill_id in self._tool_manifest.list_all():
+                skill_ids.add(skill_id)
+        else:
+            if self._skills_dir and self._skills_dir.exists():
+                for path in self._skills_dir.glob("*.md"):
+                    if path.name.startswith("_") or path.name in ("README.md", "__init__.md"):
+                        continue
+                    skill_ids.add(path.stem)
 
-        for path in sorted(self._skills_dir.glob("*.md")):
-            if path.name.startswith("_") or path.name == "README.md" or path.name == "__init__.md":
-                continue
-            skill_id = path.stem
+        for skill_id in sorted(list(skill_ids)):
             contract = self.describe_skill(skill_id)
             if contract:
                 skills.append(contract)
@@ -181,6 +221,9 @@ class Router:
 
         Raises ``KeyError`` if the tool is not registered.
         """
+        if self._onboarding_guard is not None:
+            self._onboarding_guard()
+
         # Check if it's an MCP tool (format: mcp_{server_name}_{tool_name})
         if tool.startswith("mcp_"):
             parts = tool.split("_", 2)

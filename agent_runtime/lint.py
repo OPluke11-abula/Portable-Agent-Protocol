@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from pathlib import Path
@@ -125,6 +126,9 @@ class WorkspaceLinter:
 
         # 4. Check workflow files & DAG
         self.check_workflows()
+
+        # 5. Decoupling Static Linter checks (Task 2-06)
+        self.check_decoupling()
 
         return self.issues
 
@@ -283,10 +287,16 @@ class WorkspaceLinter:
             )
             return
 
-        # 1. Warn on missing skill contract files for declared tools
+        # 1. Warn on missing skill contract files for declared tools, masking global-only skills
+        from agent_runtime.tool_manifest import ToolManifest
+        manifest = ToolManifest(local_skills_dir=skills_dir)
+        global_skills = manifest.list_global()
+
         for tool in tools_list:
             contract_path = skills_dir / f"{tool}.md"
             if not contract_path.exists():
+                if tool in global_skills:
+                    continue
                 self.issues.append(
                     LintIssue(
                         severity="error",
@@ -559,6 +569,209 @@ class WorkspaceLinter:
                 sid = step["id"]
                 params = step.get("params") or {}
                 check_references(params, sid)
+
+    def check_decoupling(self) -> None:
+        """Enforce decoupling of Brain (knowledge base / skills) and Hands (runtime tools)."""
+        # 1. Check knowledge_base
+        kb_dir = self.agent_dir / "knowledge_base"
+        if kb_dir.is_dir():
+            for file_path in kb_dir.rglob("*"):
+                if file_path.is_dir():
+                    continue
+                if file_path.name in (".gitkeep", "__init__.md"):
+                    continue
+                # Allowed extensions
+                if file_path.suffix.lower() not in (".md", ".json", ".yaml", ".yml", ".txt", ".jsonl"):
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message=f"Decoupling violation: Non-declarative/executable file '{file_path.name}' found in knowledge base.",
+                        )
+                    )
+                    continue
+
+                if file_path.suffix.lower() == ".md":
+                    try:
+                        content = file_path.read_text(encoding="utf-8")
+                        self._check_markdown_code_blocks(file_path, content, is_knowledge_base=True)
+                    except Exception as e:
+                        self.issues.append(
+                            LintIssue(
+                                severity="error",
+                                file_path=file_path,
+                                message=f"Failed to read file: {e}",
+                            )
+                        )
+
+        # 2. Check skills
+        skills_dir = self.agent_dir / "skills"
+        if skills_dir.is_dir():
+            for file_path in skills_dir.glob("*"):
+                if file_path.is_dir():
+                    continue
+                if file_path.name in ("_template.md", "__init__.md", ".gitkeep"):
+                    continue
+                # Skills must only contain .md files
+                if file_path.suffix.lower() != ".md":
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message=f"Decoupling violation: Non-markdown file '{file_path.name}' found in skills directory.",
+                        )
+                    )
+                    continue
+
+                try:
+                    content = file_path.read_text(encoding="utf-8")
+                    self._check_markdown_code_blocks(file_path, content, is_knowledge_base=False)
+                except Exception as e:
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message=f"Failed to read file: {e}",
+                        )
+                    )
+
+        # 3. Check runtime tools
+        tools_dir = self.project_root / "agent_runtime" / "tools"
+        if tools_dir.is_dir():
+            for file_path in tools_dir.glob("*"):
+                if file_path.is_dir():
+                    continue
+                if file_path.name in ("__init__.py", ".gitkeep", "README.md"):
+                    continue
+                # Tools must only contain .py files
+                if file_path.suffix.lower() != ".py":
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message=f"Decoupling violation: Non-python file '{file_path.name}' found in runtime tools directory.",
+                        )
+                    )
+                    continue
+
+                self._check_python_tool_decoupling(file_path)
+
+    def _check_markdown_code_blocks(self, file_path: Path, content: str, is_knowledge_base: bool) -> None:
+        pattern = r"```([a-zA-Z0-9_-]*)\n(.*?)\n```"
+        loc_desc = "Knowledge base entry" if is_knowledge_base else "Skill contract"
+        for match in re.finditer(pattern, content, re.DOTALL):
+            lang = match.group(1).lower()
+            code = match.group(2)
+            if lang in ("python", "py", "javascript", "js", "typescript", "ts", "go", "bash", "sh"):
+                # Ignore short illustrative snippet examples (<= 45 lines of code)
+                lines = code.splitlines()
+                if len(lines) <= 45:
+                    continue
+
+                has_impl = False
+                reasons = []
+                if "import " in code or "from " in code:
+                    has_impl = True
+                    reasons.append("imports")
+                if "def " in code or "class " in code:
+                    has_impl = True
+                    reasons.append("python definitions (def/class)")
+                if "function " in code or "const " in code or "let " in code:
+                    has_impl = True
+                    reasons.append("js/ts constructs (function/const/let)")
+
+                if has_impl:
+                    line_no = content[:match.start()].count("\n") + 1
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message=f"Decoupling violation: {loc_desc} contains a full/large implementation code block (>45 lines with {', '.join(reasons)}).",
+                            line=line_no,
+                        )
+                    )
+
+    def _extract_names(self, target: ast.AST) -> list[str]:
+        if isinstance(target, ast.Name):
+            return [target.id]
+        elif isinstance(target, (ast.Tuple, ast.List)):
+            names = []
+            for elt in target.elts:
+                names.extend(self._extract_names(elt))
+            return names
+        return []
+
+    def _check_python_tool_decoupling(self, file_path: Path) -> None:
+        try:
+            content = file_path.read_text(encoding="utf-8")
+            tree = ast.parse(content, filename=str(file_path))
+        except Exception as e:
+            self.issues.append(
+                LintIssue(
+                    severity="error",
+                    file_path=file_path,
+                    message=f"Failed to parse python file: {e}",
+                )
+            )
+            return
+
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    names = self._extract_names(target)
+                    for name in names:
+                        if not name.isupper() and name not in ("__all__", "__doc__", "__file__", "__name__", "__package__", "__path__"):
+                            # Check if value is a mutable literal or calling list/dict/set
+                            is_mutable = False
+                            if isinstance(node.value, (ast.List, ast.Dict, ast.Set)):
+                                is_mutable = True
+                            elif isinstance(node.value, ast.Call):
+                                if isinstance(node.value.func, ast.Name) and node.value.func.id in ("list", "dict", "set"):
+                                    is_mutable = True
+                            
+                            if is_mutable:
+                                self.issues.append(
+                                    LintIssue(
+                                        severity="error",
+                                        file_path=file_path,
+                                        message=f"Decoupling violation: Tool contains mutable module-level state '{name}'.",
+                                        line=node.lineno,
+                                    )
+                                )
+
+                        # Check for potential hardcoded secrets
+                        name_lower = name.lower()
+                        if any(kw in name_lower for kw in ("key", "secret", "token", "password", "credential")):
+                            val = None
+                            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                                val = node.value.value
+                            elif hasattr(ast, "Str") and isinstance(node.value, ast.Str):
+                                val = node.value.s
+                                
+                            if val and val.strip():
+                                val = val.strip()
+                                placeholders = ["placeholder", "your-", "env", "key_here", "dummy", "test", "<", ">"]
+                                if not any(p in val.lower() for p in placeholders):
+                                    self.issues.append(
+                                        LintIssue(
+                                            severity="warning",
+                                            file_path=file_path,
+                                            message=f"Potential hardcoded credential or secret in '{name}': '{val[:8]}...'",
+                                            line=node.lineno,
+                                        )
+                                    )
+
+            # Check for global statements
+            for subnode in ast.walk(node):
+                if isinstance(subnode, ast.Global):
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message="Decoupling violation: Tool contains stateful 'global' statement.",
+                            line=subnode.lineno,
+                        )
+                    )
 
     def apply_fixes(self) -> int:
         """Apply fixes for all fixable issues. Returns the count of issues fixed."""

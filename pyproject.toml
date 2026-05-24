@@ -8,7 +8,7 @@ version = "0.1.0"
 dependencies = ["PyYAML>=6.0", "certifi>=2024.0.0"]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "mypy"]
+dev = ["pytest", "pytest-cov", "ruff", "mypy"]
 
 [project.scripts]
 portable-agent = "cli:main"
@@ -21,3 +21,12 @@ include = ["agent_runtime*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=agent_runtime --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+branch = true
+source = ["agent_runtime"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80

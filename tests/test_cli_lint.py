@@ -179,3 +179,148 @@ steps:
 
     issues = linter.run_all_checks()
     assert any("does not declare a dependency on it" in i.message for i in issues)
+
+
+def test_cli_lint_decoupling_knowledge_base(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
+    _setup_spec_schemas(tmp_path)
+
+    exit_init = main(["init", "--project-name", "proj", "--agent-name", "agent"])
+    assert exit_init == 0
+
+    agent_md = tmp_path / ".agent" / "agent.md"
+    kb_dir = tmp_path / ".agent" / "knowledge_base"
+
+    # 1. Test executable file inside knowledge base
+    bad_file = kb_dir / "script.py"
+    bad_file.write_text("print('hello')", encoding="utf-8")
+
+    linter = WorkspaceLinter(agent_md)
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Non-declarative/executable file" in i.message for i in issues)
+    bad_file.unlink()
+
+    # 2. Test implementation code blocks in markdown file inside knowledge base
+    impl_md = kb_dir / "impl.md"
+    # Create a >45 line code block to trigger the decoupling check
+    python_code_lines = ["import sys", "def run():"] + [f"    print({i})" for i in range(50)]
+    python_block = "\n".join(python_code_lines)
+    impl_md.write_text(f"""---
+id: impl
+title: "Implementation"
+tags: []
+created: "2026-05-24"
+updated: "2026-05-24"
+---
+Here is some implementation details:
+```python
+{python_block}
+```
+""", encoding="utf-8")
+
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Knowledge base entry contains a full/large implementation code block" in i.message for i in issues)
+    impl_md.unlink()
+
+
+def test_cli_lint_decoupling_skills(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
+    _setup_spec_schemas(tmp_path)
+
+    exit_init = main(["init", "--project-name", "proj", "--agent-name", "agent"])
+    assert exit_init == 0
+
+    agent_md = tmp_path / ".agent" / "agent.md"
+    skills_dir = tmp_path / ".agent" / "skills"
+
+    # 1. Test non-markdown file inside skills directory
+    bad_file = skills_dir / "helper.py"
+    bad_file.write_text("def x(): pass", encoding="utf-8")
+
+    linter = WorkspaceLinter(agent_md)
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Non-markdown file 'helper.py' found in skills directory." in i.message for i in issues)
+    bad_file.unlink()
+
+    # 2. Test implementation code blocks in skill contract
+    skill_md = skills_dir / "dummy.md"
+    js_code_lines = ["const x = 5;", "function hello() {"] + [f"    console.log({i});" for i in range(50)] + ["}"]
+    js_block = "\n".join(js_code_lines)
+    skill_md.write_text(f"""---
+id: "dummy"
+name: "dummy"
+description: "dummy description"
+version: "1.0.0"
+inputs: {{}}
+outputs: {{}}
+safety_notes: []
+---
+# dummy
+```js
+{js_block}
+```
+""", encoding="utf-8")
+
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Skill contract contains a full/large implementation code block" in i.message for i in issues)
+    skill_md.unlink()
+
+
+def test_cli_lint_decoupling_tools(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "cwd", lambda: tmp_path)
+    _setup_spec_schemas(tmp_path)
+
+    exit_init = main(["init", "--project-name", "proj", "--agent-name", "agent"])
+    assert exit_init == 0
+
+    agent_md = tmp_path / ".agent" / "agent.md"
+
+    # Create dummy tools dir under project root / agent_runtime / tools
+    tools_dir = tmp_path / "agent_runtime" / "tools"
+    tools_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Test non-python file in tools
+    bad_file = tools_dir / "notes.txt"
+    bad_file.write_text("hello", encoding="utf-8")
+
+    linter = WorkspaceLinter(agent_md)
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Non-python file 'notes.txt' found in runtime tools directory." in i.message for i in issues)
+    bad_file.unlink()
+
+    # 2. Test mutable module-level state
+    mutable_tool = tools_dir / "mutable_tool.py"
+    mutable_tool.write_text("""
+my_cache = []
+def run():
+    pass
+""", encoding="utf-8")
+
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Tool contains mutable module-level state 'my_cache'." in i.message for i in issues)
+    mutable_tool.unlink()
+
+    # 3. Test global statement
+    global_tool = tools_dir / "global_tool.py"
+    global_tool.write_text("""
+def run():
+    global x
+    x = 5
+""", encoding="utf-8")
+
+    issues = linter.run_all_checks()
+    assert any("Decoupling violation: Tool contains stateful 'global' statement." in i.message for i in issues)
+    global_tool.unlink()
+
+    # 4. Test potential hardcoded credentials
+    secret_tool = tools_dir / "secret_tool.py"
+    secret_tool.write_text("""
+API_KEY = "sk-live-1234abcd5678"
+def run():
+    pass
+""", encoding="utf-8")
+
+    issues = linter.run_all_checks()
+    assert any("Potential hardcoded credential or secret in 'API_KEY'" in i.message for i in issues)
+    secret_tool.unlink()
+

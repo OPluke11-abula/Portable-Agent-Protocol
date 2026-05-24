@@ -10,6 +10,7 @@ Usage
     python cli.py --memory-read <key>    # read value from persistent memory
     python cli.py --memory-write <k> <v> # write key-value to persistent memory
     python cli.py --run-workflow <id>    # execute a multi-step workflow
+    python cli.py --resume-workflow <sid> # resume workflow from checkpoint file
 """
 
 from __future__ import annotations
@@ -98,6 +99,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Specific step ID to resume workflow from (optional, defaults to first failure/pending step)",
     )
     parser.add_argument(
+        "--resume-workflow",
+        metavar="SESSION_ID",
+        help="Resume a workflow from a runs/<session_id>.json checkpoint file (standalone, does not require --run-workflow)",
+    )
+    parser.add_argument(
         "--query-knowledge",
         metavar="KEYWORD",
         help="Search knowledge base entries by keyword and exit",
@@ -138,6 +144,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--fix",
         action="store_true",
         help="Automatically fix fixable lint issues",
+    )
+    parser.add_argument(
+        "--bypass-onboarding",
+        action="store_true",
+        help="Bypass strict onboarding guards for trusted host bootstrapping",
     )
     return parser
 
@@ -432,7 +443,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         skills = engine.router.list_skills()
         if not skills:
             print("No active skill contracts found.")
@@ -448,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         contract = engine.router.describe_skill(args.describe_skill)
         if not contract:
             print(f"Skill '{args.describe_skill}' not found in skills directory.", file=sys.stderr)
@@ -462,7 +473,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         value = engine.memory.read(args.memory_read)
         if value is None:
             print(f"Key '{args.memory_read}' not found in persistent memory.")
@@ -476,7 +487,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         key, value = args.memory_write
         try:
             parsed_val = json.loads(value)
@@ -492,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         try:
             params: dict = json.loads(args.params)
         except json.JSONDecodeError as exc:
@@ -511,13 +522,35 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Workflow execution failed: {exc}", file=sys.stderr)
             return 1
 
+    # 6b. Handle standalone workflow resume from checkpoint file
+    if args.resume_workflow:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
+        try:
+            print(f"Resuming workflow from checkpoint '{args.resume_workflow}'...")
+            result = engine.resume_workflow_from_file(
+                session_id=args.resume_workflow,
+                step_id=args.resume_step,
+            )
+            print(json.dumps(result, indent=2))
+            return 0
+        except FileNotFoundError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        except Exception as exc:
+            print(f"Workflow resume failed: {exc}", file=sys.stderr)
+            return 1
+
     # 7. Handle knowledge base queries
     if args.query_knowledge:
         from agent_runtime.engine import AgentEngine
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         results = engine.knowledge_base.query(args.query_knowledge)
         if not results:
             print(f"No knowledge entries found matching '{args.query_knowledge}'.")
@@ -536,7 +569,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         entry = engine.knowledge_base.get(args.get_knowledge)
         if entry is None:
             print(f"Knowledge entry '{args.get_knowledge}' not found.", file=sys.stderr)
@@ -638,7 +671,7 @@ def main(argv: list[str] | None = None) -> int:
         memory_keys = payload.get("memory_keys")
         handoff_id = payload.get("handoff_id")
 
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         try:
             hid = engine.export_handoff(
                 task_state=task_state,
@@ -659,7 +692,7 @@ def main(argv: list[str] | None = None) -> int:
         if not config_path.exists():
             print(f"Error: config file not found: {config_path}", file=sys.stderr)
             return 1
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         try:
             packet = engine.import_handoff(args.import_handoff)
             print(json.dumps({"success": True, "packet": packet}, indent=2))
@@ -689,7 +722,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Error: invalid JSON for --params: {exc}", file=sys.stderr)
             return 1
 
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         try:
             result = engine.run(args.tool, params)
             print(json.dumps(result, indent=2))
@@ -700,7 +733,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
     else:
-        engine = AgentEngine(config_path=config_path)
+        engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
         config = engine.config
         print(
             f"Portable Agent '{config.get('name')}' v{config.get('version')} ready.\n"

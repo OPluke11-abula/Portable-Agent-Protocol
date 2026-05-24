@@ -113,10 +113,38 @@ class WorkflowEngine:
         else:
             return value
 
+    def _resolve_runs_dir(self) -> Path:
+        """Resolve the runs/ directory path relative to the project root."""
+        from .engine import _project_root_from_config
+        project_root = _project_root_from_config(self.engine.config_path)
+        return project_root / "runs"
+
+    def _export_session_file(self, session: WorkflowSession) -> Path:
+        """Write a physical JSON checkpoint file to runs/<session_id>.json.
+
+        This enables external systems (CLI, dashboards) to read workflow DAG
+        step states directly from disk without needing the memory backend.
+
+        Returns
+        -------
+        Path
+            The path to the exported JSON file.
+        """
+        runs_dir = self._resolve_runs_dir()
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        dest = runs_dir / f"{session.session_id}.json"
+        dest.write_text(
+            json.dumps(session.to_dict(), indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        logger.debug("Exported workflow checkpoint to %s", dest)
+        return dest
+
     def _save_session(self, session: WorkflowSession) -> None:
-        """Persist workflow session state to the engine memory backend."""
+        """Persist workflow session state to memory backend and runs/ file."""
         key = f"workflow:{session.workflow_id}:session:{session.session_id}"
         self.engine.memory.write(key, session.to_dict())
+        self._export_session_file(session)
 
     def _load_session(self, workflow_id: str, session_id: str) -> WorkflowSession | None:
         """Load workflow session state from the engine memory backend."""
