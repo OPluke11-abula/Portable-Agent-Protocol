@@ -67,6 +67,18 @@ def validate_prompt_string(value: str) -> SafePromptString:
     return SafePromptString(value)
 
 
+def escape_prompt_value(value: str) -> str:
+    """Escape special characters in prompt variables to prevent tag breakout and template injection.
+
+    Escapes HTML/XML special characters (<, >, &, ", ').
+    """
+    if not isinstance(value, str):
+        return str(value)
+    import html
+    # Escape HTML/XML entities
+    return html.escape(value)
+
+
 class PromptComposer:
     """Manages prompt template indexing, verification, and rendering.
 
@@ -148,12 +160,15 @@ class PromptComposer:
 
         for k in req_vars:
             val = vars_dict[k]
-            val_str = str(val)
-
-            # Security validation for system/role prompts
-            if is_system:
-                if not isinstance(val, SafePromptString):
+            
+            if isinstance(val, SafePromptString):
+                val_str = str(val)
+            else:
+                val_str = str(val)
+                # Security validation & escaping for system/role prompts
+                if is_system:
                     validate_prompt_string(val_str)
+                    val_str = escape_prompt_value(val_str)
 
             interpolated_vars[k] = val_str
 

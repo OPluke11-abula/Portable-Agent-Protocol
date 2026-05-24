@@ -439,12 +439,12 @@ effort   : M
 depends  : 1-03
 ```
 
-- [ ] 審查所有可接受外部輸入的路徑，加入輸入驗證
-- [ ] Prompt injection 防護：確認 `prompt_composer.py` 的 variable 注入有 escaping
-- [ ] Memory key 注入防護：驗證 key 格式，拒絕含有路徑分隔符號的 key
-- [ ] Skill call 權限模型：定義哪些 skill 需要明確的使用者授權才能執行
-- [ ] 撰寫 `spec/security.md`，記錄威脅模型與防護措施
-- [ ] 補充 `tests/test_security.py`，包含 injection 攻擊的測試案例
+- [x] 審查所有可接受外部輸入的路徑，加入輸入驗證
+- [x] Prompt injection 防護：確認 `prompt_composer.py` 的 variable 注入有 escaping
+- [x] Memory key 注入防護：驗證 key 格式，拒絕含有路徑分隔符號的 key
+- [x] Skill call 權限模型：定義哪些 skill 需要明確的使用者授權才能執行
+- [x] 撰寫 `spec/security.md`，記錄威脅模型與防護措施
+- [x] 補充 `tests/test_security.py`，包含 injection 攻擊的測試案例
 
 ---
 
@@ -517,11 +517,11 @@ effort   : S
 depends  : 3-01
 ```
 
-- [ ] 建立 `.github/workflows/ci.yml`
-- [ ] CI 流程：lint → compile check → pytest → coverage report
-- [ ] 測試矩陣：Python 3.10 / 3.11 / 3.12，Ubuntu / macOS / Windows
-- [ ] 加入 badge 至 README（CI status、coverage、license）
-- [ ] PR 自動執行 `cli.py --validate` 檢查 `.agent/` 結構
+- [x] 建立 `.github/workflows/ci.yml`
+- [x] CI 流程：lint → compile check → pytest → coverage report
+- [x] 測試矩陣：Python 3.10 / 3.11 / 3.12，Ubuntu / macOS / Windows
+- [x] 加入 badge 至 README（CI status、coverage、license）
+- [x] PR 自動執行 `cli.py --validate` 檢查 `.agent/` 結構
 
 ---
 

@@ -21,6 +21,7 @@ __all__ = [
     "PromptComposer",
     "SafePromptString",
     "validate_prompt_string",
+    "escape_prompt_value",
     "ToolManifest",
 ]
 __version__ = "0.1.0"
@@ -79,13 +80,14 @@ def __getattr__(name: str):
 
         return KnowledgeBase
 
-    if name in {"PromptComposer", "SafePromptString", "validate_prompt_string"}:
-        from .prompt_composer import PromptComposer, SafePromptString, validate_prompt_string
+    if name in {"PromptComposer", "SafePromptString", "validate_prompt_string", "escape_prompt_value"}:
+        from .prompt_composer import PromptComposer, SafePromptString, validate_prompt_string, escape_prompt_value
 
         values = {
             "PromptComposer": PromptComposer,
             "SafePromptString": SafePromptString,
             "validate_prompt_string": validate_prompt_string,
+            "escape_prompt_value": escape_prompt_value,
         }
         return values[name]
 

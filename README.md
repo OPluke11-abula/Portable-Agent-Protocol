@@ -2,6 +2,9 @@
 
 [![PAP Compatible](https://img.shields.io/badge/PAP--Compatible-blue.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)]()
+[![CI](https://github.com/OPluke11-abula/Portable-Agent-Protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol/actions)
+[![Coverage](https://img.shields.io/badge/coverage-81.7%25-green.svg)]()
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 Portable Agent Protocol is a portable `.agent/` workspace specification plus a
 Python reference runtime. It separates an agent's durable collaboration state

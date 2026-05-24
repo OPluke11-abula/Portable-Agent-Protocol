@@ -20,6 +20,22 @@ _TOOLS_PACKAGE = "agent_runtime.tools"
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 
+def validate_skill_id(skill_id: str) -> None:
+    """Validate skill_id format to prevent path traversal and arbitrary file reads.
+
+    Raises ValueError if skill_id contains path separators, parent references, or invalid characters.
+    """
+    if not isinstance(skill_id, str):
+        raise TypeError("skill_id must be a string")
+    if not skill_id:
+        raise ValueError("skill_id cannot be empty")
+    # Strictly allow alphanumeric, hyphens, and underscores
+    if not re.match(r"^[a-zA-Z0-9_-]+$", skill_id):
+        raise ValueError(
+            f"Invalid skill_id format: '{skill_id}'. Only alphanumeric characters, hyphens, and underscores are allowed."
+        )
+
+
 class Router:
     """Maps tool names to their ``run`` callables, validating inputs against contracts.
 
@@ -84,6 +100,7 @@ class Router:
 
     def _load_contract(self, skill_id: str) -> dict[str, Any] | None:
         """Loads and parses the YAML front-matter of the skill contract for ``skill_id``."""
+        validate_skill_id(skill_id)
         contract_path = None
         if hasattr(self, "_tool_manifest") and self._tool_manifest is not None:
             contract_path = self._tool_manifest.get_skill_contract_path(skill_id)
@@ -155,6 +172,7 @@ class Router:
 
     def describe_skill(self, skill_id: str) -> dict[str, Any] | None:
         """Returns the parsed contract content for a single skill_id, or None if not found."""
+        validate_skill_id(skill_id)
         return self._load_contract(skill_id)
 
     def validate_call(self, skill_id: str, params: dict[str, Any]) -> None:
@@ -163,6 +181,7 @@ class Router:
         Raises:
             ValueError: If validation fails.
         """
+        validate_skill_id(skill_id)
         contract = self.describe_skill(skill_id)
         if not contract:
             logger.warning("No skill contract found for '%s', skipping validation", skill_id)
