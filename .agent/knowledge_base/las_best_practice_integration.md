@@ -84,3 +84,19 @@ When conversation context bloats (exceeding 32k tokens) or turn-count exceeds 15
     `C:\Users\luke2\AppData\Local\Programs\Python\Python314\python.exe -m pytest`
 * **Proactive Task Queue Evolution**:
   - The Analyst Agent must continuously audit the codebase against the LAS Guide, proactively appending new high-value engineering tasks (e.g., Decoupling Linter, Strict Onboarding Verifier, Auto-Failover) to `agent_tasks.md`, dynamically updating the Task Summary statistics.
+
+---
+
+## 🧠 6. Context-Length Optimization & Cognitive Hygiene (上下文優化與認知衛生)
+
+To maximize reasoning efficiency, prevent context decay, and avoid model hallucinations during multi-generational long-running threads, the protocol enforces strict context-length optimization standards:
+
+* **Task Registry Compaction (任務清單濃縮)**:
+  - When all tasks in a development phase are 100% completed, the agent must compact the detailed task checkboxes in `agent_tasks.md` into a dense, high-density milestone summary table.
+  - This prevents the active context window from being cluttered with hundreds of lines of static `[x]` items, saving up to 75% of context token overhead.
+* **Context-Length Pruning (專案檔案裁剪)**:
+  - Proactively delete temporary test databases, coverage caches (e.g., `.coverage`), build artifacts, and standard interpreter cache directories (e.g., `.pytest_cache/`, `__pycache__/`) from the active workspace.
+  - Never feed temporary/untracked logs or coverage files to the LLM context.
+* **Role-Isolated Reflection Logs (角色隔離日誌)**:
+  - Self-reflection records, lessons learned, and prompt guide improvements must be partitioned strictly by roles into `.agent/analyst/` and `.agent/programmer/` respectively.
+  - This maintains logical reasoning boundaries and prevents prompt pollution between the architect (Analyst) and implementation (Programmer) minds.

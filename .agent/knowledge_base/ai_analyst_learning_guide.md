@@ -94,3 +94,13 @@ Every time an execution Agent completes a task, it must strictly execute these s
 3. **Self-Manifest Update**: Automatically mark completed checklists in `agent_tasks.md` and append outcome logs.
 4. **Bilingual Documentation**: Update `README.md` (keep English and Traditional Chinese sections strictly separated and synchronized).
 5. **Git Pre-commit Validation**: Run the pytest suite (`C:\Users\luke2\AppData\Local\Programs\Python\Python314\python.exe -m pytest`) to ensure 100% green light, stage all changes (`git add .`), commit, and push.
+
+---
+
+## 🧠 7. Context-Length Optimization & Cognitive Hygiene (上下文優化與認知衛生)
+
+AI Analysts must actively practice cognitive hygiene to preserve context window reasoning quality across multi-generational turns:
+
+1. **Active Compaction**: When executing plans, compact completed phases inside `agent_tasks.md` into dense, tabular milestones. A clean, compact checklist reduces cognitive distraction and model hallucinations.
+2. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
+3. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.
