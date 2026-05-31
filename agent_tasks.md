@@ -456,12 +456,12 @@ effort   : S
 depends  : 3-01
 ```
 
-- [ ] 建立 `benchmarks/` 目錄
-- [ ] 基準測試：manifest 載入時間（目標 < 50ms）
-- [ ] 基準測試：skill registry 查詢時間（目標 < 10ms）
-- [ ] 基準測試：memory 讀寫時間（目標 < 100ms for 1000 entries）
-- [ ] 基準測試：workflow 步驟 routing 時間
-- [ ] 建立效能回歸測試，合併前自動執行
+- [x] 建立 `benchmarks/` 目錄
+- [x] 基準測試：manifest 載入時間（目標 < 50ms）
+- [x] 基準測試：skill registry 查詢時間（目標 < 10ms）
+- [x] 基準測試：memory 讀寫時間（目標 < 100ms for 1000 entries）
+- [x] 基準測試：workflow 步驟 routing 時間
+- [x] 建立效能回歸測試，合併前自動執行
 
 ---
 
@@ -473,10 +473,10 @@ effort   : S
 depends  : PHASE 1
 ```
 
-- [ ] 審查 `pyproject.toml` 的所有依賴，移除非必要套件
-- [ ] 區分 runtime 必要依賴 vs. dev 依賴
-- [ ] 確認 core runtime（無 dev 依賴）可在純 Python 標準函式庫下運作
-- [ ] 若需要第三方套件，在 `spec/` 中說明理由
+- [x] 審查 `pyproject.toml` 的所有依賴，移除非必要套件
+- [x] 區分 runtime 必要依賴 vs. dev 依賴
+- [x] 確認 core runtime（無 dev 依賴）可在純 Python 標準函式庫下運作
+- [x] 若需要第三方套件，在 `spec/` 中說明理由
 
 ---
 
@@ -484,13 +484,14 @@ depends  : PHASE 1
 
 ```
 priority : HIGH
+status   : [x] done
 effort   : L
 depends  : PHASE 1
 ```
 
-- [ ] 實作執行緒安全的 `accounts.json` 多帳戶管理結構與併發鎖
-- [ ] 在 LLM Provider Callbacks 實作實時計費與 token (prompt/completion/total) 統計
-- [ ] 實作 Auto-Failover 機制：呼叫前判斷剩餘額度，超限時自動切換至下一個可用帳戶
+- [x] 實作執行緒安全的 `accounts.json` 多帳戶管理結構與併發鎖
+- [x] 在 LLM Provider Callbacks 實作實時計費與 token (prompt/completion/total) 統計
+- [x] 實作 Auto-Failover 機制：呼叫前判斷剩餘額度，超限時自動切換至下一個可用帳戶
 
 ---
 
@@ -498,12 +499,13 @@ depends  : PHASE 1
 
 ```
 priority : MEDIUM
+status   : [x] done
 effort   : S
 depends  : 2-02
 ```
 
-- [ ] 導入 `pydantic` 或等效函式庫，對所有 YAML 轉入的 Dict 執行強型別約束
-- [ ] 針對 `skill.json` 與 `workflow.json` 實作 Schema 靜態驗證器
+- [x] 導入 `pydantic` 或等效函式庫，對所有 YAML 轉入的 Dict 執行強型別約束
+- [x] 針對 `skill.json` 與 `workflow.json` 實作 Schema 靜態驗證器
 
 ---
 

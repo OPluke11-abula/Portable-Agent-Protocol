@@ -387,6 +387,23 @@ class WorkspaceLinter:
                         )
                     )
 
+                # Validate exact input parameter types
+                inputs_def = data.get("inputs") or {}
+                if isinstance(inputs_def, dict):
+                    for param_name, param_info in inputs_def.items():
+                        if isinstance(param_info, dict):
+                            ptype = param_info.get("type")
+                            if not ptype or not isinstance(ptype, str) or ptype.lower() not in ("string", "boolean", "integer", "number", "float", "array", "object"):
+                                self.issues.append(
+                                    LintIssue(
+                                        severity="error",
+                                        file_path=file_path,
+                                        message=f"Skill contract input parameter '{param_name}' must declare a strict exact JSON type "
+                                                f"('string', 'integer', 'boolean', 'number', 'float', 'array', 'object'). Got: '{ptype}'",
+                                        line=find_line_for_key(content, param_name),
+                                    )
+                                )
+
     def check_workflows(self) -> None:
         workflows_dir = self.agent_dir / "workflows"
         if not workflows_dir.is_dir():

@@ -389,6 +389,168 @@ class AgentEngine:
             self.config.get("tools"),
             type(self.memory).__name__,
         )
+        if not self._onboarding_bypass:
+            self.validate_active_skills_and_workflows()
+
+    def validate_active_skills_and_workflows(self) -> None:
+        """Proactively validate all active skill contracts and workflows at runtime bootstrap."""
+        if jsonschema is None:
+            logger.warning("jsonschema is not installed. Active skills and workflows validation skipped.")
+            return
+
+        project_root = _project_root_from_config(self.config_path)
+        
+        # 1. Validate Active Skill Contracts
+        skills_schema_path = project_root / "spec" / "skill-contract.schema.json"
+        if not skills_schema_path.exists():
+            skills_schema_path = project_root / "schemas" / "skill-contract.schema.json"
+        
+        if skills_schema_path.exists():
+            try:
+                with skills_schema_path.open(encoding="utf-8") as f:
+                    skills_schema = json.load(f)
+                
+                skills_dir = self.layout.get("directories", {}).get("skills")
+                if skills_dir and skills_dir.exists():
+                    active_tools = self.config.get("tools", [])
+                    for tool in active_tools:
+                        contract_path = skills_dir / f"{tool}.md"
+                        if not contract_path.exists():
+                            continue
+                        
+                        contract_data = self.router.describe_skill(tool)
+                        if contract_data:
+                            try:
+                                jsonschema.validate(instance=contract_data, schema=skills_schema)
+                                # Also validate exact types in the contract during startup
+                                inputs_def = contract_data.get("inputs") or {}
+                                if isinstance(inputs_def, dict):
+                                    for param_name, param_info in inputs_def.items():
+                                        if isinstance(param_info, dict):
+                                            ptype = param_info.get("type")
+                                            if not ptype or not isinstance(ptype, str) or ptype.lower() not in ("string", "boolean", "integer", "number", "float", "array", "object"):
+                                                raise ValueError(
+                                                    f"Input field '{param_name}' must declare a strict exact JSON type "
+                                                    f"('string', 'integer', 'boolean', 'number', 'float', 'array', 'object'). Got: '{ptype}'"
+                                                )
+                            except jsonschema.exceptions.ValidationError as e:
+                                raise ValueError(f"Skill '{tool}' contract validation failed: {e.message}") from e
+                            except ValueError as e:
+                                raise ValueError(f"Skill '{tool}' type validation failed: {str(e)}") from e
+            except Exception as exc:
+                if not isinstance(exc, ValueError):
+                    logger.error("Failed to validate skill contracts schema: %s", exc)
+                else:
+                    raise exc
+
+        # 2. Validate Active Workflows
+        workflows_schema_path = project_root / "spec" / "workflow.schema.json"
+        if not workflows_schema_path.exists():
+            workflows_schema_path = project_root / "schemas" / "workflow.schema.json"
+        
+        if workflows_schema_path.exists():
+            try:
+                with workflows_schema_path.open(encoding="utf-8") as f:
+                    workflows_schema = json.load(f)
+                
+                workflows_dir = self.layout.get("directories", {}).get("workflows")
+                if workflows_dir and workflows_dir.exists():
+                    for path in workflows_dir.glob("*.md"):
+                        if path.name == "__init__.md":
+                            continue
+                        
+                        text = path.read_text(encoding="utf-8")
+                        match = _FRONTMATTER_RE.match(text)
+                        if not match:
+                            continue
+                        try:
+                            workflow_data = yaml.safe_load(match.group(1)) or {}
+                        except Exception as e:
+                            raise ValueError(f"Failed to parse front-matter of workflow {path.name}: {e}")
+                        
+                        try:
+                            jsonschema.validate(instance=workflow_data, schema=workflows_schema)
+                        except jsonschema.exceptions.ValidationError as e:
+                            raise ValueError(f"Workflow '{path.stem}' contract validation failed: {e.message}") from e
+
+                        steps = workflow_data.get("steps") or []
+                        seen_ids = set()
+                        for step in steps:
+                            sid = step.get("id")
+                            if sid in seen_ids:
+                                raise ValueError(f"Workflow '{path.stem}' step validation failed: Duplicate step ID '{sid}'")
+                            seen_ids.add(sid)
+
+                        adj = {}
+                        for step in steps:
+                            sid = step["id"]
+                            deps = step.get("depends_on") or []
+                            adj[sid] = []
+                            for d in deps:
+                                if d not in seen_ids:
+                                    raise ValueError(f"Workflow '{path.stem}' step '{sid}' depends on non-existent step '{d}'")
+                                adj[sid].append(d)
+
+                        # Cycle detection (DFS)
+                        visited = {sid: 0 for sid in seen_ids}
+                        def dfs(node: str, route_path: list[str]) -> None:
+                            visited[node] = 1
+                            route_path.append(node)
+                            for neighbor in adj.get(node, []):
+                                if visited.get(neighbor, 0) == 1:
+                                    cycle_idx = route_path.index(neighbor)
+                                    cycle = route_path[cycle_idx:] + [neighbor]
+                                    raise ValueError(f"Workflow '{path.stem}' circular dependency detected: {' -> '.join(cycle)}")
+                                elif visited.get(neighbor, 0) == 0:
+                                    dfs(neighbor, route_path)
+                            route_path.pop()
+                            visited[node] = 2
+
+                        for sid in seen_ids:
+                            if visited[sid] == 0:
+                                dfs(sid, [])
+
+                        # Compute transitive ancestors
+                        ancestors = {}
+                        for sid in seen_ids:
+                            nodes_to_visit = list(adj.get(sid, []))
+                            seen = set(nodes_to_visit)
+                            while nodes_to_visit:
+                                curr = nodes_to_visit.pop(0)
+                                for d in adj.get(curr, []):
+                                    if d not in seen:
+                                        seen.add(d)
+                                        nodes_to_visit.append(d)
+                            ancestors[sid] = seen
+
+                        # Verify parameter interpolation references
+                        def check_references(val: Any, step_id: str) -> None:
+                            if isinstance(val, str):
+                                matches = re.findall(r"steps\.([a-zA-Z0-9_-]+)", val)
+                                for ref_step in matches:
+                                    if ref_step not in seen_ids:
+                                        raise ValueError(f"Workflow '{path.stem}' step '{step_id}' references output of non-existent step '{ref_step}'")
+                                    if ref_step != step_id and ref_step not in ancestors.get(step_id, set()):
+                                        raise ValueError(
+                                            f"Workflow '{path.stem}' step '{step_id}' references output of step '{ref_step}' "
+                                            f"but does not declare a dependency on it in 'depends_on'."
+                                        )
+                            elif isinstance(val, dict):
+                                for k, v in val.items():
+                                    check_references(v, step_id)
+                            elif isinstance(val, list):
+                                for item in val:
+                                    check_references(item, step_id)
+
+                        for step in steps:
+                            sid = step["id"]
+                            params = step.get("params") or {}
+                            check_references(params, sid)
+            except Exception as exc:
+                if not isinstance(exc, ValueError):
+                    logger.error("Failed to validate workflows: %s", exc)
+                else:
+                    raise exc
 
     @staticmethod
     def _env_bypasses_onboarding() -> bool:

@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "portable-agent"
 version = "0.1.0"
-dependencies = ["PyYAML>=6.0", "certifi>=2024.0.0"]
+dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "ruff", "mypy"]
+dev = ["pytest", "pytest-cov", "ruff", "mypy", "jsonschema"]
 
 [project.scripts]
 portable-agent = "cli:main"

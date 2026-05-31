@@ -198,6 +198,13 @@ class Router:
             is_required = param_info.get("required", False)
             expected_type = param_info.get("type")
 
+            # Enforce exact type declaration in skill contract
+            if not expected_type or not isinstance(expected_type, str) or expected_type.lower() not in ("string", "boolean", "integer", "number", "float", "array", "object"):
+                raise ValueError(
+                    f"Validation failed for skill '{skill_id}': input field '{param_name}' must declare a strict exact JSON type "
+                    f"('string', 'integer', 'boolean', 'number', 'float', 'array', 'object'). Got: '{expected_type}'"
+                )
+
             # Check presence
             if param_name not in params:
                 if is_required:
@@ -208,32 +215,28 @@ class Router:
 
             # Check type of existing parameter
             val = params[param_name]
-            if expected_type:
-                type_ok = False
-                expected_type_lower = expected_type.lower()
+            type_ok = False
+            expected_type_lower = expected_type.lower()
 
-                if expected_type_lower == "string":
-                    type_ok = isinstance(val, str)
-                elif expected_type_lower == "boolean":
-                    type_ok = isinstance(val, bool)
-                elif expected_type_lower == "integer":
-                    type_ok = isinstance(val, int) and not isinstance(val, bool)
-                elif expected_type_lower in ("number", "float"):
-                    type_ok = isinstance(val, (int, float)) and not isinstance(val, bool)
-                elif expected_type_lower == "array":
-                    type_ok = isinstance(val, list)
-                elif expected_type_lower == "object":
-                    type_ok = isinstance(val, dict)
-                else:
-                    # Generic fallback or wildcard (any type is ok)
-                    type_ok = True
+            if expected_type_lower == "string":
+                type_ok = isinstance(val, str)
+            elif expected_type_lower == "boolean":
+                type_ok = isinstance(val, bool)
+            elif expected_type_lower == "integer":
+                type_ok = isinstance(val, int) and not isinstance(val, bool)
+            elif expected_type_lower in ("number", "float"):
+                type_ok = isinstance(val, (int, float)) and not isinstance(val, bool)
+            elif expected_type_lower == "array":
+                type_ok = isinstance(val, list)
+            elif expected_type_lower == "object":
+                type_ok = isinstance(val, dict)
 
-                if not type_ok:
-                    actual_type = type(val).__name__
-                    raise ValueError(
-                        f"Validation failed for skill '{skill_id}': parameter '{param_name}' has invalid type. "
-                        f"Expected '{expected_type}', got '{actual_type}'"
-                    )
+            if not type_ok:
+                actual_type = type(val).__name__
+                raise ValueError(
+                    f"Validation failed for skill '{skill_id}': parameter '{param_name}' has invalid type. "
+                    f"Expected '{expected_type}', got '{actual_type}'"
+                )
 
     def route(self, tool: str, params: dict[str, Any]) -> dict[str, Any]:
         """Call *tool* with *params* and return its result dict.

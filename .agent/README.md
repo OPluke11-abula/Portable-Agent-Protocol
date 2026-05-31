@@ -33,6 +33,8 @@ These folders house deep templates, leaf specifications, and persistent assets:
 - **`.agent/memory/`**: Epic/session memory records and handoff JSON files.
 - **`.agent/workflows/`**: Per-workflow DAG templates and step definitions.
 - **`.agent/knowledge_base/`**: Durable declarative project SOPs and guidebooks.
+- **`.agent/analyst/`**: Analyst exclusive space, housing logs of lessons learned, thread-sensitive guides, and cognitive thinking templates.
+- **`.agent/programmer/`**: Programmer exclusive space, housing programmer coding standards, TDD SOPs, and developer-centric guidelines.
 
 ---
 
