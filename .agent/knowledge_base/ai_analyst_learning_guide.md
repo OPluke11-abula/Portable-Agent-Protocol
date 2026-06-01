@@ -91,9 +91,10 @@ Every time an execution Agent completes a task, it must strictly execute these s
 
 1. **Clean Code & Bugs**: Clean unused imports, delete print/debug statements, and wrap async calls in robust try-except catch blocks.
 2. **Framework Decoupling**: Ensure clean service boundaries are maintained between engine, skills, routers, and adapters.
-3. **Self-Manifest Update**: Automatically mark completed checklists in `agent_tasks.md` and append outcome logs.
-4. **Bilingual Documentation**: Update `README.md` (keep English and Traditional Chinese sections strictly separated and synchronized).
-5. **Git Pre-commit Validation**: Run the pytest suite (`C:\Users\luke2\AppData\Local\Programs\Python\Python314\python.exe -m pytest`) to ensure 100% green light, stage all changes (`git add .`), commit, and push.
+3. **Self-Manifest Update & Compaction**: Automatically mark completed checklists in `agent_tasks.md`, append outcome logs, and **compact completed phases/tasks every 5 to 15 turns**.
+4. **Analyst-Exclusive README.md Management**: Only the Analyst Agent is authorized to modify the user-facing `README.md` for human readability.
+5. **Programmer-Exclusive Git Operations**: Only the Programmer Agent is authorized to execute git stage, commit, and push commands.
+6. **Git Pre-commit Validation**: Run the pytest suite to ensure 100% green light prior to the Programmer staging and committing changes.
 
 ---
 
@@ -101,6 +102,8 @@ Every time an execution Agent completes a task, it must strictly execute these s
 
 AI Analysts must actively practice cognitive hygiene to preserve context window reasoning quality across multi-generational turns:
 
-1. **Active Compaction**: When executing plans, compact completed phases inside `agent_tasks.md` into dense, tabular milestones. A clean, compact checklist reduces cognitive distraction and model hallucinations.
-2. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
-3. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.
+1. **Active Compaction (Every 5-15 Turns)**: When executing plans, compact completed phases inside `agent_tasks.md` into dense, tabular milestones. A clean, compact checklist reduces cognitive distraction and model hallucinations.
+2. **Thread-Hopping Rotation (Every 5-15 Turns)**: Trigger thread-hopping transitions every 5 to 15 turns by generating a comprehensive **English handoff prompt** and handing over to a clean agent instance to maintain high-quality reasoning.
+3. **Exclusive README.md Management**: Maintain the user-facing `README.md` solely for human users. Agents must read their execution context from `.agent/`, never relying on `README.md`. Technical developer lists or thread-hopping logs must **never** be placed in `README.md`.
+4. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
+5. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.

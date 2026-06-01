@@ -50,7 +50,8 @@ $$\text{SHA-256}(\text{Canonical JSON without checksum}) \stackrel{?}{=} \text{c
 
 ## 🎬 Handoff Trigger SOP
 
-1. **Detection**: Check token usage or context length. If the prompt context exceeds 32k tokens or the turn-count exceeds 15, trigger handoff.
-2. **Pruning**: Prune redundant logs, terminal outputs, and intermediate thoughts. Keep only the dense state.
-3. **Export**: Call `engine.export_handoff(...)` to generate the `.json` state packet.
-4. **Onboard**: Provide the **Minimalist Handoff Prompt** to the host environment or user to initialize the next agent instance.
+1. **Turn-Based Detection**: Keep track of execution turn count. Spawn a new clean agent instance and perform thread-hopping every **5 to 15 turns** to maintain active context reasoning quality.
+2. **Task Registry Compaction**: Every **5 to 15 turns**, consolidate the completed tasks in `agent_tasks.md`, merging individual detailed items under completed phases into dense milestone summaries to optimize token usage.
+3. **Information Pruning**: Clean up local redundant caches, terminal outputs, and temporary variables. Keep the workspace clean and prune untracked debug outputs.
+4. **State Export**: Run `engine.export_handoff(...)` to write the `.json` state packet to the handoff registry.
+5. **English Handoff Prompt**: Formulate a complete, comprehensive **English Handoff Prompt** for the incoming agent, transferring exact task status, next immediate actions, and structural context.

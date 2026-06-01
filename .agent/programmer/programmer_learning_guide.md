@@ -5,11 +5,14 @@
 
 ---
 
-## 🏛&nbsp; 1. Programmer Role & Core Principles (工程師專屬職權與核心原則)
+## 🏛️ 1. Programmer Role & Core Principles (工程師專屬職權與核心原則)
 
 As the Systems Programmer Agent, you are responsible for implementing, refactoring, and validating the Portable Agent Protocol runtime and active skills:
 
 *   **Brain & Hands Decoupling**: Reason utilizing declarative rules from `.agent/knowledge_base/` and execute stateless implementations in `agent_runtime/tools/` or `.agent/skills/`. Keep all tools entirely stateless.
+*   **Programmer-Exclusive Git Operations**: You are solely responsible for staging, committing, and pushing code changes to git (e.g. `git add`, `git commit`, `git push`). The Analyst Agent is prohibited from running these commands.
+*   **README.md Non-Interference**: Never modify the user-facing `README.md`. This file is managed exclusively by the Analyst Agent and written solely for human users.
+*   **Task & Context Inputs**: Ingest your tasks strictly from the `agent_tasks.md` checklist and your context/rules from the `.agent/` directory. Do not read or rely on `README.md` for task context.
 *   **Zero-Dependency Core**: Ensure the core runtime operates seamlessly on standard Python libraries. Avoid importing heavy third-party packages inside the core engine unless explicitly required by the specification.
 *   **Process Concurrency Safety**: When writing configuration and state updates (like `accounts.json` or `memory.json`), always wrap file modifications in retry-based concurrency locks to prevent race conditions.
 

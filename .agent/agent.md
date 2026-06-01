@@ -80,12 +80,14 @@ This file is the executable source of truth for the Portable Agent, incorporatin
 
 1. **Brain & Hands Decoupling**: Reason utilizing declarative frameworks inside `.agent/knowledge_base/` ("Brain") and execute with stateless reflected Python tools in `agent_runtime/tools/` or custom skills in `.agent/skills/` ("Hands").
 2. **Deterministic Routing**: Every incoming request must be routed utilizing the [Situation-to-Skill Selection Rules](file:///d:/GitHub/Portable-Agent-Protocol/.agent/routing.md).
-3. **Thread-Hopping Execution**: If the conversation context is bloated or turn-count exceeds 15, immediately trigger [Thread-Hopping Protocol](file:///d:/GitHub/Portable-Agent-Protocol/.agent/handoff_guide.md) to preserve token budget.
+3. **Thread-Hopping Execution (5-15 Turn Handoff)**: Spawn a clean agent instance and hand over task execution every **5 to 15 turns** using the [Thread-Hopping Protocol](file:///d:/GitHub/Portable-Agent-Protocol/.agent/handoff_guide.md) accompanied by a complete English handoff prompt to prevent token context bloat.
 4. **Onboarding Read Order**: Newly active agents must ingest documents in this strict order:
    $$\text{agent.md} \quad \rightarrow \quad \text{skills.md} \quad \rightarrow \quad \text{agent\_tasks.md} \quad \rightarrow \quad \text{handoff\_guide.md}$$
-5. **Strict 5-Step Work Principles**:
+   *Note: Agents must read their execution context from the `.agent/` directory, never from the user-facing `README.md`.*
+5. **Strict 6-Step Work Principles**:
    - **Clean Code**: Remove debug outputs and wrap async operations in try-except blocks.
    - **Service Boundaries**: Decouple core engine, adapters, and tools.
-   - **Self-Manifest Update**: Mark completed items in `agent_tasks.md` and document logs.
-   - **Bilingual Documentation**: Synchronize English and Chinese sections in `README.md`.
+   - **Self-Manifest Update & Compaction**: Mark completed items in `agent_tasks.md`, compile outcome logs, and **compact completed phases/tasks every 5 to 15 turns** into dense milestone tables.
+   - **Analyst-Exclusive README.md Management**: The user-facing `README.md` is updated exclusively by the Analyst Agent. It is written solely for humans. Developer logs, task checklists, and internal progress records must **never** be written to `README.md`.
+   - **Programmer-Exclusive Git Operations**: Staging, committing, and pushing changes to git are executed exclusively by the Programmer Agent.
    - **Pre-commit pytest validation**: Always execute pytest suite (`python -m pytest`) to ensure 100% green status before staging and committing.

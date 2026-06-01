@@ -92,8 +92,18 @@ When conversation context bloats (exceeding 32k tokens) or turn-count exceeds 15
 To maximize reasoning efficiency, prevent context decay, and avoid model hallucinations during multi-generational long-running threads, the protocol enforces strict context-length optimization standards:
 
 * **Task Registry Compaction (任務清單濃縮)**:
-  - When all tasks in a development phase are 100% completed, the agent must compact the detailed task checkboxes in `agent_tasks.md` into a dense, high-density milestone summary table.
+  - **Every 5 to 15 turns**, the agent must actively review and compact the completed tasks/phases inside `agent_tasks.md` into a dense, high-density milestone summary table.
   - This prevents the active context window from being cluttered with hundreds of lines of static `[x]` items, saving up to 75% of context token overhead.
+* **Thread-Hopping Rotation (5-15 Turn Handover)**:
+  - **Every 5 to 15 turns**, the active agent must trigger thread-hopping by exporting the session state and passing task execution to a clean agent instance.
+  - The handover must be accompanied by a **complete English handoff prompt** specifying exact status and immediate action items.
+* **Exclusive README.md Management & Intended Audience**:
+  - The user-facing `README.md` is updated exclusively by the Analyst Agent.
+  - **Human Audience ONLY**: `README.md` is intended solely for human users, not for agents. Agents must ingest their guidelines and schemas exclusively from `.agent/` directory entry points, never relying on `README.md`.
+  - **No Developer Overhead**: Technical checklists, internal progress logs, and multi-generational thread records must **never** be placed in the user-facing `README.md`.
+* **Programmer-Exclusive Git Delegation**:
+  - Staging, committing, and pushing code changes to git (e.g. `git add`, `git commit`, `git push`) are executed exclusively by the Programmer Agent (representing the stateless execution "Hands").
+  - The Analyst Agent is strictly prohibited from running git commit/push operations.
 * **Context-Length Pruning (專案檔案裁剪)**:
   - Proactively delete temporary test databases, coverage caches (e.g., `.coverage`), build artifacts, and standard interpreter cache directories (e.g., `.pytest_cache/`, `__pycache__/`) from the active workspace.
   - Never feed temporary/untracked logs or coverage files to the LLM context.
