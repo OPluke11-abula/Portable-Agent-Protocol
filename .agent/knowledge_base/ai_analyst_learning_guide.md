@@ -104,6 +104,12 @@ AI Analysts must actively practice cognitive hygiene to preserve context window 
 
 1. **Active Compaction (Every 5-15 Turns)**: When executing plans, compact completed phases inside `agent_tasks.md` into dense, tabular milestones. A clean, compact checklist reduces cognitive distraction and model hallucinations.
 2. **Thread-Hopping Rotation (Every 5-15 Turns)**: Trigger thread-hopping transitions every 5 to 15 turns by generating a comprehensive **English handoff prompt** and handing over to a clean agent instance to maintain high-quality reasoning.
-3. **Exclusive README.md Management**: Maintain the user-facing `README.md` solely for human users. Agents must read their execution context from `.agent/`, never relying on `README.md`. Technical developer lists or thread-hopping logs must **never** be placed in `README.md`.
-4. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
-5. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.
+3. **Analyst Boundary Control Gate**: Strictly enforce Systems Analyst and Software Architect boundaries. Prioritize high-level architecture design, schema contracts, cost-accounting reviews, and security gate audits. Do not proceed to codebase execution or modification unless explicitly instructed by the user. Always wait for user confirmation on plans before dispatching programmer tasks.
+4. **High-Fidelity Prompt Delegation**: Avoid writing brief or generic task descriptions during handovers or multi-agent swarms. Enforce structural delegation prompts containing:
+   - Input/Output schemas and interface contracts.
+   - Mock and test requirements (to restrict redundant API costs/external dependencies).
+   - Sandboxed security limits (file access, network scopes).
+   - Exact file scopes and precise exit criteria (DoD).
+5. **Exclusive README.md Management**: Maintain the user-facing `README.md` solely for human users. Agents must read their execution context from `.agent/`, never relying on `README.md`. Technical developer lists or thread-hopping logs must **never** be placed in `README.md`.
+6. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
+7. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.

@@ -97,6 +97,14 @@ To maximize reasoning efficiency, prevent context decay, and avoid model halluci
 * **Thread-Hopping Rotation (5-15 Turn Handover)**:
   - **Every 5 to 15 turns**, the active agent must trigger thread-hopping by exporting the session state and passing task execution to a clean agent instance.
   - The handover must be accompanied by a **complete English handoff prompt** specifying exact status and immediate action items.
+* **Analyst Boundary Control Gate (分析師邊界管制)**:
+  - Strict enforcement of Systems Analyst and Software Architect boundaries. Prioritize high-level architecture design, schema contracts, cost-accounting reviews, and security gate audits. Do not proceed to codebase execution or modification unless explicitly instructed by the user. Always wait for user confirmation on plans before dispatching programmer tasks.
+* **High-Fidelity Prompt Delegation (高保真提示詞委派)**:
+  - Avoid writing brief or generic task descriptions during handovers or multi-agent swarms. Enforce structural delegation prompts containing:
+    1. Input/Output schemas and interface contracts.
+    2. Mock and test requirements (to restrict redundant API costs/external dependencies).
+    3. Sandboxed security limits (file access, network scopes).
+    4. Exact file scopes and precise exit criteria (DoD).
 * **Exclusive README.md Management & Intended Audience**:
   - The user-facing `README.md` is updated exclusively by the Analyst Agent.
   - **Human Audience ONLY**: `README.md` is intended solely for human users, not for agents. Agents must ingest their guidelines and schemas exclusively from `.agent/` directory entry points, never relying on `README.md`.
