@@ -34,3 +34,12 @@ Maintain a high quality and security standard for the codebase:
 ## 🛡️ 3. Safe File Modification Rules (檔案安全修改原則)
 *   **Strict Imports Check**: When loading module-level code, avoid mutable global state statements or hardcoded secrets.
 *   **Esoteric & Standard Types**: Verify all input types strictly against exact JSON types: `["string", "integer", "boolean", "number", "float", "array", "object"]`. Reject loose types.
+
+---
+
+## 🛡️ 4. Git Safety & Actor Synchronization Safeguards (Git 安全與協作者同步防護)
+To prevent accidental loss of code and friction in multi-agent or collaborative team environments, you must enforce the following safeguards before performing any destructive Git commands (e.g. `git checkout <commit> -- <files>`, `git reset`, or deletion of files):
+
+1. **Compare Actor Commit History**: Run `git log -n 5` to audit the latest commits and check if other actors (humans or other AI agents) have introduced new changes in this phase.
+2. **User Confirmation Gate**: If you detect any new commits from other actors, stop immediately and request explicit user confirmation. Do **not** execute blind overwrites or resets.
+3. **Never Assume status is absolute**: Never assume a clean `git status` indicates that no other work has occurred, as the local or remote `HEAD` may have been advanced independently. Always sync with the remote/history records first.

@@ -111,5 +111,6 @@ AI Analysts must actively practice cognitive hygiene to preserve context window 
    - Sandboxed security limits (file access, network scopes).
    - Exact file scopes and precise exit criteria (DoD).
 5. **Exclusive README.md Management**: Maintain the user-facing `README.md` solely for human users. Agents must read their execution context from `.agent/`, never relying on `README.md`. Technical developer lists or thread-hopping logs must **never** be placed in `README.md`.
-6. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
-7. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.
+6. **Git Safety & Actor Synchronization**: Guide the Programmer to run `git log -n 5` before executing destructive commands (resets, checking out old commits, or file deletions) to check for concurrent commits from other actors. Never execute blind overwrites.
+7. **Workspace Pruning**: Guide the Programmer to regularly delete untracked temporary outputs, execution logs, and coverage databases (`.coverage`). Keeping the workspace clean prevents file context noise.
+8. **Strict Cognitive Isolation**: Enforce distinct boundary files for self-reflections (e.g., `analyst/lessons_learned.md` vs. `programmer/lessons_learned.md`) to prevent persona confusion and maintain high role-specific prompt effectiveness.

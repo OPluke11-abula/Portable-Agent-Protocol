@@ -112,6 +112,10 @@ To maximize reasoning efficiency, prevent context decay, and avoid model halluci
 * **Programmer-Exclusive Git Delegation**:
   - Staging, committing, and pushing code changes to git (e.g. `git add`, `git commit`, `git push`) are executed exclusively by the Programmer Agent (representing the stateless execution "Hands").
   - The Analyst Agent is strictly prohibited from running git commit/push operations.
+* **Destructive Git & Actor Safeguards (Git 安全與協作者同步)**:
+  - Enforce safeguards before executing any destructive operations (e.g., reverting historical commits, resetting the workspace index, or checking out older commits).
+  - The executing agent must run `git log -n 5` to compare commits and verify if other actors (humans or AI) have made concurrent changes.
+  - If concurrent changes are found, stop execution immediately and prompt the user for permission. Never assume that `git status` output represents the absolute repository sync state.
 * **Context-Length Pruning (專案檔案裁剪)**:
   - Proactively delete temporary test databases, coverage caches (e.g., `.coverage`), build artifacts, and standard interpreter cache directories (e.g., `.pytest_cache/`, `__pycache__/`) from the active workspace.
   - Never feed temporary/untracked logs or coverage files to the LLM context.
