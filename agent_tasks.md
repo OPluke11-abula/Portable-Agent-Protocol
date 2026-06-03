@@ -70,12 +70,12 @@ effort   : M
 depends  : 2-05, 4-01
 ```
 
-- [ ] 確認 `pyproject.toml` 的 metadata 完整（name, version, description, author, license, classifiers）
-- [ ] 建立 `CHANGELOG.md`（根目錄，面向使用者）
-- [ ] 建立 `CONTRIBUTING.md`，說明如何貢獻 skill contract 或 runtime 實作
-- [ ] 測試 `pip install -e .` 在乾淨環境的安裝流程
-- [ ] 準備 PyPI 發布（若決定公開發布）
-- [ ] 建立 GitHub Release 流程（tag-based）
+- [x] 確認 `pyproject.toml` 的 metadata 完整（name, version, description, author, license, classifiers）
+- [x] 建立 `CHANGELOG.md`（根目錄，面向使用者）
+- [x] 建立 `CONTRIBUTING.md`，說明如何貢獻 skill contract 或 runtime 實作
+- [x] 測試 `pip install -e .` 在乾淨環境的安裝流程
+- [x] 準備 PyPI 發布（若決定公開發布）
+- [x] 建立 GitHub Release 流程（tag-based）
 
 ---
 

@@ -1,0 +1,25 @@
+changelog:
+  exclude:
+    labels:
+      - ignore
+      - duplicate
+      - invalid
+  categories:
+    - title: '🚀 Features'
+      labels:
+        - feature
+        - feat
+        - enhancement
+    - title: '🐛 Bug Fixes'
+      labels:
+        - bug
+        - fix
+        - hotfix
+    - title: '🧰 Documentation & Chores'
+      labels:
+        - chore
+        - docs
+        - documentation
+        - test
+        - ci
+        - refactor
