@@ -104,6 +104,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Resume a workflow from a runs/<session_id>.json checkpoint file (standalone, does not require --run-workflow)",
     )
     parser.add_argument(
+        "--self-audit",
+        action="store_true",
+        help="Run the agent self-audit diagnostic",
+    )
+    parser.add_argument(
         "--query-knowledge",
         metavar="KEYWORD",
         help="Search knowledge base entries by keyword and exit",
@@ -435,6 +440,55 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         except Exception as e:
             print(f"Validation failed: {e}", file=sys.stderr)
+            return 1
+
+    # 1.5 Handle self-audit
+    if args.self_audit or (args.command and args.command[0] == "self-audit"):
+        from agent_runtime.engine import AgentEngine
+        from agent_runtime import AgentSelfAuditor
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        try:
+            engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
+            auditor = AgentSelfAuditor(engine)
+            print("Running agent self-audit diagnostic...")
+            report = auditor.run_audit()
+            
+            value = report["semantic"]["value"]
+            summary = value["summary"]
+            issues = value["issues"]
+            recommendations = value["recommendations"]
+
+            print("\n==========================================")
+            print("        PAP SELF-AUDIT REPORT")
+            print("==========================================")
+            print(f" Timestamp      : {value['timestamp']}")
+            print(f" Skills Checked : {summary['skills_checked']}")
+            print(f" Skills Issues  : {summary['skills_issues']}")
+            print(f" Memory Size    : {summary['memory_size_bytes']} bytes")
+            print(f" Handoff Files  : {summary['handoff_count']}")
+            print(f" Abandoned Runs : {summary['abandoned_workflows']}")
+            print("------------------------------------------")
+            
+            if issues:
+                print(f"\n[WARNING] Detected {len(issues)} Issue(s):")
+                for idx, issue in enumerate(issues, 1):
+                    print(f"  {idx}. [{issue['type'].upper()}] (ID: {issue['id']})")
+                    print(f"     Details: {issue['details']}")
+            else:
+                print("\n[OK] No workspace health issues detected.")
+
+            if recommendations:
+                print(f"\n[REC] Actionable Recommendation(s):")
+                for r, rec in enumerate(recommendations, 1):
+                    print(f"  {r}. [{rec['priority']}] (Task: {rec['task_id']})")
+                    print(f"     {rec['description']}")
+            print("==========================================\n")
+            
+            return 0
+        except Exception as e:
+            print(f"Self-audit execution failed: {e}", file=sys.stderr)
             return 1
 
     # 2. Handle skill listing

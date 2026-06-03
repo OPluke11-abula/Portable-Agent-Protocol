@@ -23,12 +23,17 @@ __all__ = [
     "validate_prompt_string",
     "escape_prompt_value",
     "ToolManifest",
+    "AgentSelfAuditor",
 ]
 __version__ = "0.1.0"
 
 
 def __getattr__(name: str):
     """Lazily expose runtime symbols without forcing optional imports."""
+    if name == "AgentSelfAuditor":
+        from .audit import AgentSelfAuditor
+        return AgentSelfAuditor
+
     if name == "ToolManifest":
         from .tool_manifest import ToolManifest
         return ToolManifest

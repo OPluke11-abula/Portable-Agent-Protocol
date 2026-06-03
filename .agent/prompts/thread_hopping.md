@@ -39,17 +39,21 @@ Use this prompt to condense a complex conversation into a dense, token-efficient
 You are triggered in MINIMALIST HANDOFF mode.
 1. Scan the current conversation context, tool executions, and intermediate state logs.
 2. Prune verbose conversations, raw error stacks, and redundant comments.
-3. Generate a dense, high-impact English Handoff Prompt inside a code block, formatted as follows:
+3. Generate a structured, high-fidelity English Handoff Prompt inside a code block, formatted as follows:
 
-=== MINIMALIST AGENT HANDOFF PACKET ===
+=== HIGH-FIDELITY AGENT HANDOFF DISPATCH ===
 [CONSTRUCTED PERSONA]: Meticulous system programmer specialized in [Topic].
 [WHAT CHANGED]: High-level bulleted summary of files added, modified, or deleted.
 [CURRENT STATE & BLOCKED ISSUES]: Short status summary.
+[INTERFACE CONTRACTS]: Specific inputs/outputs, parameter schemas, and data structures.
+[MOCK & TEST REQUIREMENTS]: Specific unit test paths, test assertions, and mock boundaries to prevent redundant API/external calls.
+[SECURITY CONSTRAINTS]: Sandbox boundaries, file permission limits, and credentials handling.
 [IMMEDIATE TASK LIST]:
-  - [ ] Step 1: ...
-  - [ ] Step 2: ...
+  - [ ] Task 1: [Specific description, targets, and precise file paths]
+  - [ ] Task 2: ...
+[EXIT CRITERIA (DoD)]: Precise verification commands (e.g. pytest command, lint command) and expected outputs.
 [CHECKPOINT ID]: handoff_<uuid>
-========================================
+============================================
 
 4. Export the corresponding state payload utilizing `engine.export_handoff(...)`.
 ```

@@ -105,10 +105,10 @@ effort   : M
 depends  : 1-02, 3-01
 ```
 
-- [ ] 定義 self-audit workflow：agent 定期檢查自身 `.agent/` 狀態
-- [ ] 檢查項目：skill 版本是否過時、memory 是否達到清理閾值、workflow 是否有長期 pending 任務
-- [ ] 自動產生 audit report 寫入 `.agent/memory/semantic/audit_log.json`
-- [ ] 在發現問題時產生 task recommendation（建議人類執行哪個 task）
+- [x] 定義 self-audit workflow：agent 定期檢查自身 `.agent/` 狀態
+- [x] 檢查項目：skill 版本是否過時、memory 是否達到清理閾值、workflow 是否有長期 pending 任務
+- [x] 自動產生 audit report 寫入 `.agent/memory/semantic/audit_log.json`
+- [x] 在發現問題時產生 task recommendation（建議人類執行哪個 task）
 
 ---
 
