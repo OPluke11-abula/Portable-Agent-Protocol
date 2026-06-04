@@ -109,6 +109,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run the agent self-audit diagnostic",
     )
     parser.add_argument(
+        "--promote-knowledge",
+        metavar="EPISODIC_ID",
+        help="Promote a high-value episodic memory record to a semantic knowledge draft document",
+    )
+    parser.add_argument(
+        "--confirm-knowledge",
+        metavar="ENTRY_ID",
+        help="Confirm a draft knowledge entry, setting its status to stable",
+    )
+    parser.add_argument(
+        "--force-promotion",
+        action="store_true",
+        help="Bypass high-value heuristic checks during knowledge promotion",
+    )
+    parser.add_argument(
         "--query-knowledge",
         metavar="KEYWORD",
         help="Search knowledge base entries by keyword and exit",
@@ -489,6 +504,60 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         except Exception as e:
             print(f"Self-audit execution failed: {e}", file=sys.stderr)
+            return 1
+
+    # 1.6 Handle promote-knowledge subcommand or flag
+    promote_id = None
+    if args.promote_knowledge:
+        promote_id = args.promote_knowledge
+    elif args.command and args.command[0] == "promote-knowledge":
+        if len(args.command) < 2:
+            print("Error: 'promote-knowledge' requires an episodic entry ID.", file=sys.stderr)
+            return 1
+        promote_id = args.command[1]
+
+    if promote_id:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        try:
+            engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
+            print(f"Promoting episodic entry '{promote_id}'...")
+            entry = engine.knowledge_base.promote(promote_id, force=args.force_promotion)
+            print(f"Success: Promoted as draft semantic entry: {entry['id']}")
+            print(f"  Title: {entry['title']}")
+            print(f"  Path:  {entry['path']}")
+            print(f"  Tags:  {', '.join(entry['tags'])}")
+            print("Use 'confirm-knowledge' to promote this entry to 'stable'.")
+            return 0
+        except Exception as e:
+            print(f"Knowledge promotion failed: {e}", file=sys.stderr)
+            return 1
+
+    # 1.7 Handle confirm-knowledge subcommand or flag
+    confirm_id = None
+    if args.confirm_knowledge:
+        confirm_id = args.confirm_knowledge
+    elif args.command and args.command[0] == "confirm-knowledge":
+        if len(args.command) < 2:
+            print("Error: 'confirm-knowledge' requires a knowledge entry ID.", file=sys.stderr)
+            return 1
+        confirm_id = args.command[1]
+
+    if confirm_id:
+        from agent_runtime.engine import AgentEngine
+        if not config_path.exists():
+            print(f"Error: config file not found: {config_path}", file=sys.stderr)
+            return 1
+        try:
+            engine = AgentEngine(config_path=config_path, bypass_onboarding=args.bypass_onboarding)
+            print(f"Confirming knowledge entry '{confirm_id}'...")
+            engine.knowledge_base.confirm(confirm_id)
+            print(f"Success: Knowledge entry '{confirm_id}' confirmed and updated to stable.")
+            return 0
+        except Exception as e:
+            print(f"Knowledge confirmation failed: {e}", file=sys.stderr)
             return 1
 
     # 2. Handle skill listing

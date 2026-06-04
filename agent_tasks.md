@@ -120,10 +120,10 @@ effort   : L
 depends  : 1-02, 5-01
 ```
 
-- [ ] 定義 knowledge extraction 規則：什麼樣的 episodic memory 值得升級為 semantic knowledge
-- [ ] 實作 `KnowledgeBase.promote(episodic_entry_id)` —— 將 episodic 轉為 semantic
-- [ ] 加入人工確認步驟：自動升級的條目需標記 `status: draft`，等待確認後才變 `stable`
-- [ ] 補充測試與範例
+- [x] 定義 knowledge extraction 規則：什麼樣的 episodic memory 值得升級為 semantic knowledge
+- [x] 實作 `KnowledgeBase.promote(episodic_entry_id)` —— 將 episodic 轉為 semantic
+- [x] 加入人工確認步驟：自動升級的條目需標記 `status: draft`，等待確認後才變 `stable`
+- [x] 補充測試與範例
 
 ---
 
