@@ -38,3 +38,14 @@ To guarantee 100% thread-state alignment across multi-generational boundaries, t
 ### Policy C: Thread-Sensitive Decision Tree (執行緒敏感決策樹)
 *   **Is it a Cold-Start?** (No existing `handoff.md` or prior conversation logs): Initiate full research, generate `implementation_plan.md`, obtain user approval.
 *   **Is it a Warm-Start?** (Existing `handoff.md` with in-progress tasks): Ingest the dense state, immediately align the task checklist in `agent_tasks.md`, and proceed directly to code execution/validation.
+
+---
+
+## 🔍 4. [2026-06-04] Stale Context Assumption & Active Backlog Ingestion Failure
+
+*   **The Issue**: The Analyst relied on text context history and the compaction summaries to recommend `Task 5-01` as the next step, without physically verifying the current checklist states in `agent_tasks.md` or auditing if `agent_runtime/audit.py` and `tests/test_audit.py` were already implemented in the filesystem.
+*   **Impact**: Suggested a redundant work direction, causing coordination overhead and requiring the user to correct the task state.
+*   **Root Cause**: Cognitive complacency by trusting text logs/handoff descriptions instead of running a live codebase inspection and file search first.
+*   **Correction Policy**:
+    - **Physical Manifest Verification**: Always query/view the physical manifest file `agent_tasks.md` and verify file directories (using `list_dir` or `view_file`) before recommending any tasks to the user or downstream agents.
+    - **Never Assume Stale Checklists**: Do not assume that historical logs or context-summary descriptions are perfectly synchronized with the workspace. The physical files are the single source of truth.
