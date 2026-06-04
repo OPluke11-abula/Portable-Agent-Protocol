@@ -49,3 +49,13 @@ To guarantee 100% thread-state alignment across multi-generational boundaries, t
 *   **Correction Policy**:
     - **Physical Manifest Verification**: Always query/view the physical manifest file `agent_tasks.md` and verify file directories (using `list_dir` or `view_file`) before recommending any tasks to the user or downstream agents.
     - **Never Assume Stale Checklists**: Do not assume that historical logs or context-summary descriptions are perfectly synchronized with the workspace. The physical files are the single source of truth.
+
+---
+
+## 🔍 5. [2026-06-04] Meta-Correction: Repetitive Stale Context Failure
+
+*   **The Issue**: Immediately following the definition of the *Stale Context Ingestion* policy, the Analyst again suggested `Task 5-02` (which had just been implemented and pushed by another concurrent generation or child run) without physically reading `agent_tasks.md` at the start of the turn.
+*   **Impact**: Wasted user time correcting the task state again.
+*   **Root Cause**: Failing to execute the newly defined `Physical Manifest Verification` policy immediately. Relying on pre-existing chat messages from earlier in the session instead of re-reading `agent_tasks.md` directly.
+*   **Enforced Safeguard**:
+    - Every analyst bootstrap or turn must start with a physical read of the active checklist `agent_tasks.md` file using the `view_file` tool to align with the current git status, bypassing any cached context. No exceptions.
