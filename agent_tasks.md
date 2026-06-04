@@ -87,11 +87,11 @@ effort   : XL
 depends  : 4-02
 ```
 
-- [ ] 設計 public skill registry 的 API 格式
-- [ ] 建立 `registry/` 目錄，放置社群貢獻的 skill contract
-- [ ] 定義 skill 發布與審查流程
-- [ ] CLI 加入 `--install-skill <id>` 指令，從 registry 安裝 skill
-- [ ] CLI 加入 `--publish-skill <path>` 指令，發布 skill 至 registry
+- [x] 設計 public skill registry 的 API 格式
+- [x] 建立 `registry/` 目錄，放置社群貢獻的 skill contract
+- [x] 定義 skill 發布與審查流程
+- [x] CLI 加入 `--install-skill <id>` 指令，從 registry 安裝 skill
+- [x] CLI 加入 `--publish-skill <path>` 指令，發布 skill 至 registry
 
 ---
 

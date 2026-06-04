@@ -144,6 +144,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Import state from a handoff packet file and exit",
     )
     parser.add_argument(
+        "--install-skill",
+        metavar="SKILL_ID",
+        help="Fetch and install a skill contract from the registry",
+    )
+    parser.add_argument(
+        "--publish-skill",
+        metavar="FILE_PATH",
+        help="Validate and publish a skill contract to the registry",
+    )
+    parser.add_argument(
         "--project-name",
         help="Project name for workspace initialization",
     )
@@ -558,6 +568,58 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         except Exception as e:
             print(f"Knowledge confirmation failed: {e}", file=sys.stderr)
+            return 1
+
+    # 1.8 Handle install-skill subcommand or flag
+    install_id = None
+    if args.install_skill:
+        install_id = args.install_skill
+    elif args.command and args.command[0] == "install-skill":
+        if len(args.command) < 2:
+            print("Error: 'install-skill' requires a skill ID.", file=sys.stderr)
+            return 1
+        install_id = args.command[1]
+
+    if install_id:
+        from agent_runtime.registry import install_skill
+        from agent_runtime.engine import AgentEngine
+        
+        skills_dir = Path(".agent/skills")
+        if config_path.exists():
+            try:
+                engine = AgentEngine(config_path=config_path, bypass_onboarding=True)
+                skills_dir = engine.router._skills_dir
+            except Exception:
+                pass
+        
+        try:
+            print(f"Installing skill '{install_id}' from the registry to '{skills_dir}'...")
+            entry = install_skill(install_id, skills_dir)
+            print(f"Success: Installed skill '{entry['id']}' (v{entry['version']}) successfully.")
+            return 0
+        except Exception as e:
+            print(f"Skill installation failed: {e}", file=sys.stderr)
+            return 1
+
+    # 1.9 Handle publish-skill subcommand or flag
+    publish_path = None
+    if args.publish_skill:
+        publish_path = args.publish_skill
+    elif args.command and args.command[0] == "publish-skill":
+        if len(args.command) < 2:
+            print("Error: 'publish-skill' requires a file path.", file=sys.stderr)
+            return 1
+        publish_path = args.command[1]
+
+    if publish_path:
+        from agent_runtime.registry import publish_skill
+        try:
+            print(f"Validating and publishing skill contract from '{publish_path}'...")
+            entry = publish_skill(publish_path)
+            print(f"Success: Published skill '{entry['id']}' (v{entry['version']}) to the public registry.")
+            return 0
+        except Exception as e:
+            print(f"Skill publication failed: {e}", file=sys.stderr)
             return 1
 
     # 2. Handle skill listing
