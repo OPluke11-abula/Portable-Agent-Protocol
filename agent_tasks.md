@@ -135,10 +135,10 @@ effort   : L
 depends  : 0-03, 5-01
 ```
 
-- [ ] 當 agent 呼叫了一個不在 registry 的 tool 時，自動產生 capability contract 草稿
-- [ ] 草稿放入 `.agent/skills/drafts/`，標記 `status: draft`
-- [ ] 草稿包含：根據呼叫行為推斷的 inputs / outputs / description
-- [ ] 需人工審查確認後，才能移至正式 `.agent/skills/`
+- [x] 當 agent 呼叫了一個不在 registry 的 tool 時，自動產生 capability contract 草稿
+- [x] 草稿放入 `.agent/skills/drafts/`，標記 `status: draft`
+- [x] 草稿包含：根據呼叫行為推斷的 inputs / outputs / description
+- [x] 需人工審查確認後，才能移至正式 `.agent/skills/`
 
 ---
 

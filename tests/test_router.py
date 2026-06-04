@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from agent_runtime.router import Router
-from agent_runtime.engine import AgentEngine
+from agent_runtime.engine import AgentEngine, UnregisteredSkillError
 
 
 # ---------------------------------------------------------------------------
@@ -205,7 +205,7 @@ class TestAgentEngine:
     def test_engine_unknown_tool_raises(self, tmp_path: Path) -> None:
         path = _write_agent_md(tmp_path, ["search_web"])
         engine = AgentEngine(config_path=path)
-        with pytest.raises(KeyError):
+        with pytest.raises(UnregisteredSkillError):
             engine.run("does_not_exist", {})
 
     def test_layered_skill_pipeline(self, tmp_path: Path) -> None:

@@ -280,6 +280,11 @@ class HandoffRequired(RuntimeError):
         )
 
 
+class UnregisteredSkillError(ValueError):
+    """Raised when an attempt is made to call a skill that is not registered or is a draft."""
+    pass
+
+
 class AgentEngine:
     """Bootstraps the agent runtime from the protocol config."""
 
@@ -779,6 +784,12 @@ class AgentEngine:
 
         # Retrieve the skill contract to get the specific authorization/permission level
         contract = self.router.describe_skill(skill_id)
+        if not self.router.is_registered_in_active_registry(skill_id):
+            self._generate_skill_draft(skill_id, params)
+            raise UnregisteredSkillError(
+                f"Skill '{skill_id}' is not registered in the active registry. "
+                f"A draft contract has been generated at '.agent/skills/drafts/{skill_id}.md'."
+            )
         
         # Check permission level (contract or fallback to agent default)
         skill_auth = None
@@ -1101,4 +1112,146 @@ class AgentEngine:
 
         logger.info("Successfully imported handoff state from %s", src_file)
         return packet
+
+    def _generate_skill_draft(self, skill_id: str, params: dict[str, Any]) -> None:
+        """Automatically generate a capability contract draft (Markdown) conforming to the schema."""
+        import yaml
+        
+        # 1. Inspect Python registry if tool exists
+        handler = self.router._registry.get(skill_id)
+        description = f"Automatically generated contract draft for skill {skill_id}."
+        purpose = f"Automatically generated contract draft for skill {skill_id}."
+        
+        if handler and handler.__doc__:
+            lines = [line.strip() for line in handler.__doc__.splitlines() if line.strip()]
+            if lines:
+                description = lines[0]
+                purpose_lines = []
+                for line in lines:
+                    if line.lower().startswith(("parameters", "returns", "----", "====")):
+                        break
+                    purpose_lines.append(line)
+                if purpose_lines:
+                    purpose = " ".join(purpose_lines)
+
+        # 2. Infer input parameters from params
+        inputs = {}
+        for param_name, param_val in params.items():
+            if isinstance(param_val, bool):
+                param_type = "boolean"
+            elif isinstance(param_val, int):
+                param_type = "integer"
+            elif isinstance(param_val, float):
+                param_type = "number"
+            elif isinstance(param_val, str):
+                param_type = "string"
+            elif isinstance(param_val, list):
+                param_type = "array"
+            elif isinstance(param_val, dict):
+                param_type = "object"
+            else:
+                param_type = "string"
+
+            # Check if docstring has parameter description
+            param_desc = f"Inferred input parameter {param_name}"
+            if handler and handler.__doc__:
+                for line in handler.__doc__.splitlines():
+                    if param_name in line and ":" in line:
+                        parts = line.split(":", 1)
+                        desc_part = parts[1].strip()
+                        if "—" in desc_part:
+                            desc_part = desc_part.split("—", 1)[1].strip()
+                        elif "-" in desc_part:
+                            desc_part = desc_part.split("-", 1)[1].strip()
+                        if desc_part:
+                            param_desc = desc_part
+                            break
+
+            inputs[param_name] = {
+                "type": param_type,
+                "description": param_desc,
+                "required": True
+            }
+
+        # 3. Formulate outputs
+        outputs = {
+            "result": {
+                "type": "object",
+                "description": f"The execution result of skill {skill_id}."
+            }
+        }
+
+        # 4. Formulate safety notes
+        safety_notes = [
+            "Review execution safety before deploying this skill.",
+            "Verify input parameters and potential side-effects."
+        ]
+
+        # 5. Build YAML Front-matter
+        front_matter_data = {
+            "id": skill_id,
+            "name": skill_id,
+            "description": description[:100] if len(description) > 100 else description,
+            "version": "1.0.0",
+            "status": "draft",
+            "inputs": inputs,
+            "outputs": outputs,
+            "safety_notes": safety_notes,
+            "author": "pap-auto-generator"
+        }
+
+        try:
+            front_matter_str = yaml.dump(front_matter_data, sort_keys=False, allow_unicode=True)
+        except Exception as e:
+            logger.warning("Failed to serialize yaml for skill draft %s: %s", skill_id, e)
+            front_matter_str = ""
+
+        # 6. Build Markdown body
+        inputs_md_list = []
+        for p_name, p_info in inputs.items():
+            req_str = "Required" if p_info["required"] else "Optional"
+            inputs_md_list.append(f"- `{p_name}` ({p_info['type']}, **{req_str}**): {p_info['description']}")
+        inputs_md = "\n".join(inputs_md_list) if inputs_md_list else "None."
+
+        outputs_md_list = []
+        for o_name, o_info in outputs.items():
+            outputs_md_list.append(f"- `{o_name}` ({o_info['type']}): {o_info['description']}")
+        outputs_md = "\n".join(outputs_md_list) if outputs_md_list else "None."
+
+        safety_md_list = []
+        for note in safety_notes:
+            safety_md_list.append(f"- {note}")
+        safety_md = "\n".join(safety_md_list)
+
+        markdown_content = f"""---
+{front_matter_str.strip()}
+---
+
+# Skill: {skill_id}
+
+{description}
+
+## Purpose
+
+{purpose}
+
+## Required Inputs
+
+{inputs_md}
+
+## Expected Outputs
+
+{outputs_md}
+
+## Safety
+
+{safety_md}
+"""
+
+        # 7. Write to draft path
+        drafts_dir = self.router._skills_dir / "drafts"
+        drafts_dir.mkdir(parents=True, exist_ok=True)
+        draft_path = drafts_dir / f"{skill_id}.md"
+        draft_path.write_text(markdown_content, encoding="utf-8")
+        logger.info("Automatically generated skill contract draft at: %s", draft_path)
 

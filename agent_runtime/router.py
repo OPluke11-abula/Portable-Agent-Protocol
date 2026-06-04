@@ -122,6 +122,9 @@ class Router:
             data = yaml.safe_load(match.group(1)) or {}
             if not isinstance(data, dict):
                 data = {}
+            if data.get("status") == "draft" or "drafts" in contract_path.parts:
+                logger.debug("Skill contract %s is a draft, refusing to load officially", contract_path)
+                return None
             if not data.get("id"):
                 data["id"] = skill_id
             if not data.get("name"):
@@ -140,6 +143,40 @@ class Router:
         except Exception as exc:
             logger.warning("Error reading skill contract %s: %s", contract_path, exc)
             return None
+
+    def is_registered_in_active_registry(self, skill_id: str) -> bool:
+        """Checks if a skill contract file exists on disk and is NOT a draft."""
+        try:
+            validate_skill_id(skill_id)
+        except (TypeError, ValueError):
+            return False
+
+        contract_path = None
+        if hasattr(self, "_tool_manifest") and self._tool_manifest is not None:
+            contract_path = self._tool_manifest.get_skill_contract_path(skill_id)
+
+        if not contract_path:
+            if not self._skills_dir:
+                return False
+            contract_path = self._skills_dir / f"{skill_id}.md"
+
+        if not contract_path.exists():
+            return False
+
+        if "drafts" in contract_path.parts:
+            return False
+
+        try:
+            text = contract_path.read_text(encoding="utf-8")
+            match = _FRONTMATTER_RE.match(text)
+            if match:
+                data = yaml.safe_load(match.group(1)) or {}
+                if isinstance(data, dict) and data.get("status") == "draft":
+                    return False
+        except Exception:
+            pass
+
+        return True
 
     # ------------------------------------------------------------------
     # Public API
