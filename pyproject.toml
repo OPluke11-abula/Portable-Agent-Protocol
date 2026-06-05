@@ -5,11 +5,30 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "portable-agent"
 version = "0.1.0"
-dependencies = ["PyYAML>=6.0", "certifi>=2024.0.0"]
+description = "Portable Agent Protocol (PAP) Reference Implementation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Portable Agent Protocol Contributors"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+keywords = ["agent", "ai", "protocol", "mcp", "workflow"]
+dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
-anthropic = ["anthropic>=0.25.0", "httpx>=0.27.0"]
-dev = ["pytest", "ruff", "mypy"]
+dev = ["pytest", "pytest-cov", "ruff", "mypy", "jsonschema"]
 
 [project.scripts]
 portable-agent = "cli:main"
@@ -22,3 +41,12 @@ include = ["agent_runtime*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=agent_runtime --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+branch = true
+source = ["agent_runtime"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80

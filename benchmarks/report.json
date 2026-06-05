@@ -1,0 +1,26 @@
+{
+  "environment": {
+    "python_version": "3.14.3",
+    "os": "Windows",
+    "os_release": "11",
+    "processor": "Intel64 Family 6 Model 141 Stepping 1, GenuineIntel"
+  },
+  "metrics": {
+    "manifest_loading_ms": 24.229829999967478,
+    "skill_registry_lookup_ms": 2.3764391999975487,
+    "memory_in_memory_write_1000_ms": 0.37289999818312936,
+    "memory_in_memory_read_1000_ms": 0.19629999951575883,
+    "memory_sqlite_write_1000_ms": 5.651299998135073,
+    "memory_sqlite_read_1000_ms": 3.395800002181204,
+    "workflow_routing_ms": 1.2016815000060888
+  },
+  "targets": {
+    "manifest_loading_ms": 50.0,
+    "skill_registry_lookup_ms": 10.0,
+    "memory_in_memory_write_1000_ms": 100.0,
+    "memory_in_memory_read_1000_ms": 100.0,
+    "memory_sqlite_write_1000_ms": 100.0,
+    "memory_sqlite_read_1000_ms": 100.0,
+    "workflow_routing_ms": 50.0
+  }
+}

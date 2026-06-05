@@ -1,3 +1,7 @@
+---
+schema_version: "1.0.0"
+---
+
 # Prompts Entry Point
 
 This file is the runtime-facing prompt catalog for the Portable Agent.

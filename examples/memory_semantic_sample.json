@@ -1,0 +1,13 @@
+{
+  "key": "db_connection_setting",
+  "value": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "postgres"
+  },
+  "metadata": {
+    "created_at": "2026-05-20T12:00:00Z",
+    "updated_at": "2026-05-20T12:05:00Z",
+    "tags": ["database", "credentials", "local-dev"]
+  }
+}

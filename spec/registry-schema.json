@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/OPluke11-abula/Portable-Agent-Protocol/main/spec/registry-schema.json",
+  "title": "Portable Agent Protocol Registry Index Schema",
+  "description": "JSON Schema for validating the public skill registry index.json index",
+  "type": "object",
+  "required": [
+    "registry_version",
+    "skills"
+  ],
+  "properties": {
+    "registry_version": {
+      "type": "string",
+      "description": "Semantic version of the registry format spec.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "skills": {
+      "type": "object",
+      "description": "Registry of skills indexed by their unique skill ID.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "description",
+          "author",
+          "path"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique, machine-readable identifier of the skill.",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-friendly or backward-compatible name.",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "version": {
+            "type": "string",
+            "description": "The semver version of the registered skill.",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the skill's capabilities."
+          },
+          "author": {
+            "type": "string",
+            "description": "Author or publisher of the skill."
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path to the skill contract markdown file in the registry."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,9 @@
-# Prompt Template: error_handling
-
+---
+id: error_handling
+version: 1.0.0
+usage: Guidelines for error handling, failure recovery and escalation
+variables: []
+---
 當工具、技能或依賴失敗時，請依序處理：
 
 1. 確認是否可重現

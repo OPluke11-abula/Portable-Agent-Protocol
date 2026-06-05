@@ -55,6 +55,27 @@ logger = get_logger(__name__)
 
 
 # ---------------------------------------------------------------------------
+# Key Validation Helper
+# ---------------------------------------------------------------------------
+
+def validate_memory_key(key: str) -> None:
+    """Validate memory key to prevent path traversal and database injection.
+
+    Raises ValueError if key contains path separators, null bytes, or exceeds 256 characters.
+    """
+    if not isinstance(key, str):
+        raise TypeError("Memory key must be a string")
+    if not key:
+        raise ValueError("Memory key cannot be empty")
+    if len(key) > 256:
+        raise ValueError("Memory key exceeds maximum length of 256 characters")
+    if "\x00" in key or "\0" in key:
+        raise ValueError("Memory key cannot contain null bytes")
+    if "/" in key or "\\" in key or ".." in key:
+        raise ValueError("Memory key cannot contain path separators or parent directory references")
+
+
+# ---------------------------------------------------------------------------
 # Abstract Base Class
 # ---------------------------------------------------------------------------
 
@@ -86,6 +107,14 @@ class MemoryBackend(ABC):
         retrieval.
         """
 
+    def query(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+        """Query the memory backend. Delegates to ``search`` by default.
+
+        This ensures backwards compatibility across all memory backend types
+        while providing a standard interface for executing query searches.
+        """
+        return self.search(query, top_k=top_k)
+
     @abstractmethod
     def clear(self) -> None:
         """Remove **all** entries from the store."""
@@ -104,13 +133,16 @@ class InMemoryBackend(MemoryBackend):
         logger.info("InMemoryBackend initialised (ephemeral)")
 
     def read(self, key: str) -> Any:
+        validate_memory_key(key)
         return self._store.get(key)
 
     def write(self, key: str, value: Any) -> None:
+        validate_memory_key(key)
         self._store[key] = value
         self._timestamps[key] = time.time()
 
     def delete(self, key: str) -> bool:
+        validate_memory_key(key)
         existed = key in self._store
         self._store.pop(key, None)
         self._timestamps.pop(key, None)
@@ -173,16 +205,19 @@ class JSONFileBackend(MemoryBackend):
     # -- public API ---------------------------------------------------------
 
     def read(self, key: str) -> Any:
+        validate_memory_key(key)
         with self._lock:
             return self._load().get(key)
 
     def write(self, key: str, value: Any) -> None:
+        validate_memory_key(key)
         with self._lock:
             data = self._load()
             data[key] = value
             self._save(data)
 
     def delete(self, key: str) -> bool:
+        validate_memory_key(key)
         if not self._file.exists():
             return False
         with self._lock:
@@ -247,6 +282,7 @@ class SQLiteBackend(MemoryBackend):
     # -- public API ---------------------------------------------------------
 
     def read(self, key: str) -> Any:
+        validate_memory_key(key)
         with self._lock:
             row = self._conn.execute(
                 "SELECT value FROM memory WHERE key = ?", (key,)
@@ -256,6 +292,7 @@ class SQLiteBackend(MemoryBackend):
         return json.loads(row[0])
 
     def write(self, key: str, value: Any) -> None:
+        validate_memory_key(key)
         serialised = json.dumps(value, ensure_ascii=False)
         with self._lock:
             with self._conn:
@@ -266,6 +303,7 @@ class SQLiteBackend(MemoryBackend):
                 )
 
     def delete(self, key: str) -> bool:
+        validate_memory_key(key)
         with self._lock:
             with self._conn:
                 cursor = self._conn.execute(
@@ -313,12 +351,15 @@ class VectorDBBackend(MemoryBackend):
         self._fallback = InMemoryBackend()
 
     def read(self, key: str) -> Any:
+        validate_memory_key(key)
         return self._fallback.read(key)
 
     def write(self, key: str, value: Any) -> None:
+        validate_memory_key(key)
         self._fallback.write(key, value)
 
     def delete(self, key: str) -> bool:
+        validate_memory_key(key)
         return self._fallback.delete(key)
 
     def list_keys(self) -> list[str]:

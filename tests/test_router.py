@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from agent_runtime.router import Router
-from agent_runtime.engine import AgentEngine
+from agent_runtime.engine import AgentEngine, UnregisteredSkillError
 
 
 # ---------------------------------------------------------------------------
@@ -30,6 +30,37 @@ def _write_agent_md(tmp_path: Path, tools: list[str]) -> Path:
     p = tmp_path / "agent.md"
     p.write_text(content)
     return p
+
+
+def _write_skill_contract(skills_dir: Path, skill_id: str) -> None:
+    skills_dir.mkdir(parents=True, exist_ok=True)
+    (skills_dir / f"{skill_id}.md").write_text(
+        textwrap.dedent(
+            f"""\
+            ---
+            id: {skill_id}
+            name: {skill_id}
+            description: Contract used by router edge-case tests.
+            version: 1.0.0
+            inputs:
+              count:
+                type: integer
+                required: true
+              enabled:
+                type: boolean
+                required: false
+              metadata:
+                type: object
+                required: false
+            outputs:
+              accepted:
+                type: boolean
+            ---
+            # {skill_id}
+            """
+        ),
+        encoding="utf-8",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -55,6 +86,42 @@ class TestRouter:
         router = Router(tools=["query_db", "search_web", "code_executor"])
         assert router.available_tools == sorted(router.available_tools)
 
+    def test_contract_type_violation_blocks_dispatch(self, tmp_path: Path) -> None:
+        skills_dir = tmp_path / "skills"
+        _write_skill_contract(skills_dir, "typed_tool")
+        router = Router(skills_dir=skills_dir)
+        was_called = False
+
+        def handler(params: dict[str, Any]) -> dict[str, Any]:
+            nonlocal was_called
+            was_called = True
+            return {"accepted": True}
+
+        router.register_tool("typed_tool", handler)
+
+        with pytest.raises(ValueError, match="parameter 'count' has invalid type"):
+            router.route("typed_tool", {"count": "3", "enabled": True})
+
+        assert was_called is False
+
+    def test_contract_missing_required_input_blocks_dispatch(self, tmp_path: Path) -> None:
+        skills_dir = tmp_path / "skills"
+        _write_skill_contract(skills_dir, "typed_tool")
+        router = Router(skills_dir=skills_dir)
+        router.register_tool("typed_tool", lambda params: {"accepted": True})
+
+        with pytest.raises(ValueError, match="missing required input field 'count'"):
+            router.route("typed_tool", {"metadata": {"source": "test"}})
+
+    def test_integer_contract_rejects_boolean_values(self, tmp_path: Path) -> None:
+        skills_dir = tmp_path / "skills"
+        _write_skill_contract(skills_dir, "typed_tool")
+        router = Router(skills_dir=skills_dir)
+        router.register_tool("typed_tool", lambda params: {"accepted": True})
+
+        with pytest.raises(ValueError, match="Expected 'integer', got 'bool'"):
+            router.route("typed_tool", {"count": True})
+
 
 # ---------------------------------------------------------------------------
 # Tool stub tests routed via Router
@@ -77,8 +144,8 @@ class TestSearchWebTool:
             assert "snippet" in item
 
     def test_missing_query_returns_error(self) -> None:
-        result = self.router.route("search_web", {})
-        assert "error" in result
+        with pytest.raises(ValueError, match="missing required input field"):
+            self.router.route("search_web", {})
 
 
 class TestQueryDbTool:
@@ -86,13 +153,13 @@ class TestQueryDbTool:
         self.router = Router(tools=["query_db"])
 
     def test_returns_rows(self) -> None:
-        result = self.router.route("query_db", {"sql": "SELECT 1"})
+        result = self.router.route("query_db", {"connection_target": "default", "query_intent": "SELECT 1"})
         assert "rows" in result
         assert len(result["rows"]) >= 1
 
     def test_missing_sql_returns_error(self) -> None:
-        result = self.router.route("query_db", {})
-        assert "error" in result
+        with pytest.raises(ValueError, match="missing required input field"):
+            self.router.route("query_db", {"connection_target": "default"})
 
 
 class TestCodeExecutorTool:
@@ -100,22 +167,22 @@ class TestCodeExecutorTool:
         self.router = Router(tools=["code_executor"])
 
     def test_runs_simple_code(self) -> None:
-        result = self.router.route("code_executor", {"code": "print('hello')"})
+        result = self.router.route("code_executor", {"runtime": "python", "command": "print('hello')"})
         assert result["exit_code"] == 0
         assert "hello" in result["stdout"]
 
     def test_captures_stderr(self) -> None:
         result = self.router.route(
-            "code_executor", {"code": "import sys; sys.stderr.write('err\\n')"}
+            "code_executor", {"runtime": "python", "command": "import sys; sys.stderr.write('err\\n')"}
         )
         assert "err" in result["stderr"]
 
     def test_missing_code_returns_error(self) -> None:
-        result = self.router.route("code_executor", {})
-        assert "error" in result
+        with pytest.raises(ValueError, match="missing required input field"):
+            self.router.route("code_executor", {"runtime": "python"})
 
     def test_non_zero_exit_on_syntax_error(self) -> None:
-        result = self.router.route("code_executor", {"code": "def broken syntax"})
+        result = self.router.route("code_executor", {"runtime": "python", "command": "def broken syntax"})
         assert result["exit_code"] != 0
 
 
@@ -131,6 +198,32 @@ class TestAgentEngine:
 
     def test_engine_route_search_web(self, tmp_path: Path) -> None:
         path = _write_agent_md(tmp_path, ["search_web"])
+        skills_dir = tmp_path / "skills"
+        skills_dir.mkdir(parents=True, exist_ok=True)
+        (skills_dir / "search_web.md").write_text(textwrap.dedent("""\
+            ---
+            id: search_web
+            name: search_web
+            description: Web search
+            version: 1.0.0
+            inputs:
+              query:
+                type: string
+                description: search query
+                required: true
+              limit:
+                type: integer
+                description: limit results
+                required: false
+            outputs:
+              results:
+                type: array
+                description: results
+            safety_notes:
+              - None
+            ---
+            # search_web
+        """), encoding="utf-8")
         engine = AgentEngine(config_path=path)
         result = engine.run("search_web", {"query": "pytest", "limit": 2})
         assert len(result["results"]) == 2
@@ -138,5 +231,75 @@ class TestAgentEngine:
     def test_engine_unknown_tool_raises(self, tmp_path: Path) -> None:
         path = _write_agent_md(tmp_path, ["search_web"])
         engine = AgentEngine(config_path=path)
-        with pytest.raises(KeyError):
+        with pytest.raises(UnregisteredSkillError):
             engine.run("does_not_exist", {})
+
+    def test_layered_skill_pipeline(self, tmp_path: Path) -> None:
+        local_dir = tmp_path / "local"
+        local_dir.mkdir()
+        global_dir = tmp_path / "global"
+        global_dir.mkdir()
+
+        # 1. Local overrides global
+        (local_dir / "override_skill.md").write_text(textwrap.dedent("""\
+            ---
+            id: override_skill
+            name: override_skill
+            description: local description
+            version: 1.0.0
+            inputs:
+              val:
+                type: string
+                required: true
+            outputs: {}
+            safety_notes: []
+            ---
+        """))
+        (global_dir / "override_skill.md").write_text(textwrap.dedent("""\
+            ---
+            id: override_skill
+            name: override_skill
+            description: global description
+            version: 1.0.0
+            inputs:
+              val:
+                type: integer
+                required: true
+            outputs: {}
+            safety_notes: []
+            ---
+        """))
+
+        # 2. Global fallback
+        (global_dir / "fallback_skill.md").write_text(textwrap.dedent("""\
+            ---
+            id: fallback_skill
+            name: fallback_skill
+            description: global description
+            version: 1.0.0
+            inputs:
+              val:
+                type: string
+                required: true
+            outputs: {}
+            safety_notes: []
+            ---
+        """))
+
+        from agent_runtime.tool_manifest import ToolManifest
+        manifest = ToolManifest(local_skills_dir=local_dir, global_skills_dir=global_dir)
+
+        router = Router(skills_dir=local_dir, tool_manifest=manifest)
+
+        # Describe override_skill should return the local one (description: local description)
+        desc_override = router.describe_skill("override_skill")
+        assert desc_override is not None
+        assert desc_override["description"] == "local description"
+
+        # Describe fallback_skill should return the global one
+        desc_fallback = router.describe_skill("fallback_skill")
+        assert desc_fallback is not None
+        assert desc_fallback["description"] == "global description"
+
+        # Describe nonexistent should be None
+        assert router.describe_skill("nonexistent") is None

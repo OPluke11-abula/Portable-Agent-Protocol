@@ -2,6 +2,9 @@
 
 [![PAP Compatible](https://img.shields.io/badge/PAP--Compatible-blue.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)]()
+[![CI](https://github.com/OPluke11-abula/Portable-Agent-Protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/OPluke11-abula/Portable-Agent-Protocol/actions)
+[![Coverage](https://img.shields.io/badge/coverage-81.7%25-green.svg)]()
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 Portable Agent Protocol is a portable `.agent/` workspace specification plus a
 Python reference runtime. It separates an agent's durable collaboration state
@@ -32,6 +35,15 @@ stable workspace that can travel between those environments:
 An agent can clone a project, read `.agent/agent.md`, and recover the project's
 collaboration contract without relying on one vendor's runtime state.
 
+## Agent Onboarding & Bootstrapping (.AGENT)
+
+To enable incoming AI agents to instantly align with their persona, active tasks, and execution rules, the repository defines a root-level onboarding configuration:
+
+*   **[.AGENT.md](.AGENT.md)**: The human-readable and agent-facing entry point. It declares the agent's identity as a Lead Systems Programmer, lists its skills directory (`.agent/skills/`), details its task queue (`agent_tasks.md`), and specifies high-priority post-work execution routines.
+*   **[.cursorrules](.cursorrules)**: The IDE integration layer that automatically directs modern AI coding tools to read `.AGENT.md` and `.agent/agent.md` upon session startup.
+
+*Note: Due to case-insensitive naming conflicts on Windows between a root file and a directory sharing the name `.agent`, the root-level configuration is named `.AGENT.md` instead of `.AGENT`.*
+
 ## Architecture
 
 ```mermaid
@@ -58,56 +70,69 @@ The `.agent/` workspace follows a three-layer model:
 3. Detailed directories: `.agent/*/` folders hold detailed specs, templates,
    and supporting guidance.
 
-## Anthropic Skills Integration
 
-PAP now interoperates with Anthropic-style Agent Skills. Anthropic skills define
-portable skill folders with a top-level `SKILL.md`; PAP provides the upper
-orchestration layer around those skills: registry sync, memory writeback,
-workflow ownership, prompt policy, and runtime routing.
-
-```mermaid
-flowchart LR
-    A["PAP .agent/skills/*.md"] --> B["Format Bridge"]
-    B --> C["anthropic_skills/*/SKILL.md"]
-    D["Anthropic skills repo"] --> E["Registry Loader"]
-    E --> F[".agent/skills.md"]
-    F --> G["Router"]
-    G --> H["Local PAP runtime"]
-    G --> I["Claude API container.skills"]
-    I --> J[".agent/memory/<skill>/<session>.md"]
-```
-
-Supported flows:
-
-- Export local PAP contracts to Anthropic `SKILL.md` folders.
-- Load local Anthropic skill folders into `.agent/skills.md`.
-- Sync Anthropic's public skills repository directly from GitHub.
-- Validate local PAP skill contracts for Anthropic frontmatter compatibility.
-- Dispatch through Claude API with PAP memory context and optional
-  `container.skills` references for uploaded custom skills or Anthropic
-  built-ins.
 
 ## Repository Layout
 
 ```text
+.AGENT.md                          Root onboarding entrypoint (Windows compatible)
+.cursorrules                       Root IDE / agent bridge
 .agent/
   agent.md                         Executable PAP manifest
   skills.md                        Runtime-facing skill registry
   prompts.md                       Prompt registry
   memory.md                        Memory contract
+  memory/                          Tiered Memory Storage
+    episodic/                      Turn-by-turn history (.jsonl)
+    semantic/                      Durable structured knowledge (.json)
+    handoff/                       Inter-agent context packets (.json)
+    schema.json                    JSON Schema for memory validation
   workflows.md                     Workflow registry
-  knowledge_base/
-    anthropic_integration.md       PAP x Anthropic design notes
+
+spec/                              Protocol JSON Schema Definitions
+  agent-schema.json                JSON Schema for agent.md manifest
+  skill-contract.schema.json       JSON Schema for skill contracts
+  memory.schema.json               JSON Schema for memory layouts
+  workflow.schema.json             JSON Schema for workflows
+  knowledge.schema.json            JSON Schema for knowledge base entries
+
 agent_runtime/
   engine.py                        Runtime bootstrap and layout validation
   router.py                        Local, MCP, and Claude API dispatch
-  bridges/anthropic_skill_bridge.py
-  loaders/anthropic_skills_loader.py
+  knowledge.py                     Read-only Knowledge Base query interface
+
   memory/
     __init__.py                    Memory backends
     writeback.py                   Skill execution writeback
 tests/                             Pytest coverage for runtime and integrations
 ```
+
+### Knowledge Base
+
+Durable project knowledge is stored in `.agent/knowledge_base/`. Each entry is
+a Markdown file with YAML front-matter (`id`, `title`, `tags`, `created`,
+`updated`) validated against `spec/knowledge.schema.json`. An `index.json`
+registry file catalogues all entries.
+
+The knowledge base is **read-only at runtime** — any mutation must go through
+the T-04 Protocol Evolution process.
+
+## Protocol Schema Validation (`spec/`)
+
+To ensure vendor-agnostic portability and strict structural integrity, the Portable Agent Protocol utilizes standard **JSON Schema (Draft-07)** to formally define and validate all core configuration files.
+
+The schemas are defined under the `spec/` directory:
+- **[agent-schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/agent-schema.json)**: Standardizes the executable manifest `.agent/agent.md` YAML front-matter (e.g. tools, memory tiers, protocol layout, runtime settings).
+- **[skill-contract.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/skill-contract.schema.json)**: Outlines capability contracts in `.agent/skills/*.md`.
+- **[memory.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/memory.schema.json)**: Formulates long-term, semantic, episodic, and handoff memory formats.
+- **[workflow.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/workflow.schema.json)**: Structures the steps and dependency graphs (DAG) in `.agent/workflows/*.md`.
+- **[knowledge.schema.json](file:///D:/GitHub/Portable-Agent-Protocol/spec/knowledge.schema.json)**: Validates front-matter metadata (`id`, `title`, `tags`, `created`, `updated`) for knowledge base entries.
+
+Runtimes validate these layouts automatically during bootstrap. You can trigger manual validation using the CLI:
+```bash
+python cli.py validate
+```
+
 
 ## Installation
 
@@ -123,79 +148,61 @@ For development:
 pip install -e ".[dev]"
 ```
 
-For Claude API skill dispatch:
 
-```bash
-pip install -e ".[anthropic]"
-```
 
 ## CLI
 
-Initialize or validate a PAP workspace:
+The PAP reference CLI provides commands for workspace initialization, schema-enforced validations, skill discovery, memory operations, and workflow runs:
 
 ```bash
+# Initialize a new .agent/ workspace (interactive)
 python cli.py init
+
+# Initialize with explicit flags (non-interactive)
+python cli.py init --project-name my-proj --agent-name my-agent --skills search_web,query_db
+
+# Dry-run mode (preview without writing)
+python cli.py init --project-name my-proj --agent-name my-agent --dry-run
+
+# Validate the local .agent/ layout and files against schemas
 python cli.py validate
-```
 
-Run a local PAP tool:
+# Lint the workspace for schemas, versions, and workflow DAG/dependency consistency
+python cli.py lint
 
-```bash
+# Auto-fix fixable issues
+python cli.py lint --fix
+
+# List all declared active skill contracts
+python cli.py --list-skills
+
+# Print the detailed schema and contract of a single skill
+python cli.py --describe-skill search_web
+
+# Persist and read key-value data using the memory backend
+python cli.py --memory-write cli_key "some_value"
+python cli.py --memory-read cli_key
+
+# Run an automated multi-step workflow
+python cli.py --run-workflow sample_workflow --params '{"arg": 123}'
+
+# Invoke a specific local tool directly
 python cli.py --tool search_web --params '{"query":"portable agents"}'
+
+# Search knowledge base entries by keyword
+python cli.py --query-knowledge "architecture"
+
+# Retrieve a specific knowledge base entry by ID
+python cli.py --get-knowledge api-docs
+
+# Export a signed cross-agent state handoff packet
+python cli.py --export-handoff '{"task_state": "Step A done", "pending_steps": ["Do Step B"], "context_summary": "Planning done", "memory_keys": ["data_key"], "handoff_id": "handoff-id"}'
+
+# Import and restore state from a handoff packet file
+python cli.py --import-handoff "handoff-id"
 ```
 
-Export local PAP skill contracts as Anthropic skill folders:
 
-```bash
-python cli.py --export-skills --output ./anthropic_skills/
-```
-
-Sync Anthropic skills into the PAP registry:
-
-```bash
-python cli.py --sync-anthropic-skills --source ./path/to/anthropics/skills/
-python cli.py --sync-anthropic-skills --source github:anthropics/skills
-```
-
-Validate local skill export compatibility:
-
-```bash
-python cli.py --validate-compatibility
-```
-
-Dispatch through Claude API:
-
-```bash
-python cli.py --tool search_web \
-  --params '{"query":"test"}' \
-  --via-claude-api \
-  --anthropic-skill-id skill_01Example \
-  --anthropic-skill-type custom
-```
-
-For Anthropic built-in document skills, use the built-in skill id:
-
-```bash
-python cli.py --tool xlsx \
-  --params '{"task":"Create a budget spreadsheet"}' \
-  --via-claude-api \
-  --anthropic-skill-id xlsx \
-  --anthropic-skill-type anthropic
-```
-
-Claude API dispatch requires `ANTHROPIC_API_KEY`. PAP loads recent skill memory
-before dispatch and writes the result to `.agent/memory/<skill>/<session>.md`.
-
-## Skill Compatibility Rules
-
-- PAP skill names use snake_case.
-- Anthropic skill folder names use kebab-case.
-- Exported `SKILL.md` files must have `name` and `description` frontmatter.
-- Descriptions must be non-empty and concise.
-- Local PAP runtime skills remain authoritative when a synced external skill
-  has the same name.
-- Synced external skills are registry entries until a runtime tool or uploaded
-  Claude API skill id is available.
 
 ## Memory
 
@@ -213,6 +220,13 @@ from agent_runtime.memory import create_memory_backend
 from agent_runtime.memory.writeback import write_skill_result
 ```
 
+## Cross-Agent Handoff
+
+The Portable Agent Protocol includes a robust, schema-validated task handoff mechanism allowing state, context summaries, and memory snapshots to be serialized, signed with SHA-256 integrity checksums, and transferred between different agents cleanly.
+
+- **Export Handoff**: `engine.export_handoff(task_state, pending_steps, context_summary, memory_keys)` packages the state and creates a signed packet file under `.agent/memory/handoff/<handoff_id>.json`.
+- **Import Handoff**: `engine.import_handoff(handoff_id)` validates the packet integrity checksum, verifies the schema structure against `spec/memory.schema.json`, and restores the memory snapshot into the target engine's active memory backend.
+
 ## MCP Bridge
 
 PAP and MCP solve different layers:
@@ -229,6 +243,28 @@ python cli.py mcp sync
 
 to discover MCP tools and materialize local skill contracts under `.agent/`.
 
+## Token Auditing & Auto-Failover
+
+PAP runtimes track token consumption and budget limits across multiple API accounts:
+- **Multi-Account Concurrency Lock**: Reads and writes to `accounts.json` utilize retry-based filesystem locking (`.lock` files) to prevent concurrent write collisions.
+- **Dynamic Variable Expansion**: Enforces secure handling of sensitive keys using dynamic environment expansion (e.g., `api_key: "${ENV_VAR}"`).
+- **Auto-Failover**: Intercepts LLM calls, hooks token metadata callbacks to count exact costs, and automatically suspends accounts when rate limits or costs are exhausted, seamlessly falling back to available backup accounts.
+
+## Self-Evolution
+
+PAP enables agents to self-maintain and update their workspaces dynamically:
+- **Agent Self-Audit**: Triggers diagnostic workspace checks (`python cli.py --self-audit`) analyzing contract schemas, memory size limits, and abandoned workflows. Writes health summaries directly to semantic memory (`.agent/memory/semantic/audit_log.json`).
+- **Knowledge Auto-Promotion**: Transition high-value episodic/session memories to semantic database entries utilizing `KnowledgeBase.promote(episodic_id)`. Promoted files are marked as `status: draft` until verified by a human user or Analyst.
+- **Skill Auto-Drafting**: When calling an unregistered tool, the runtime automatically intercepts the call, infers parameter types and docstring structures, and generates a new contract draft under `.agent/skills/drafts/[tool_id].md`.
+
+## PAP Registry
+
+PAP supports sharing and installing community-contributed skill contracts:
+- **Register Skills**: Share verified skills with the public registry directory.
+- **CLI Commands**:
+  - `python cli.py --install-skill <skill_id>` installs skill contracts from the public registry to the local project.
+  - `python cli.py --publish-skill <path>` validates skill contracts against schemas and registers them.
+
 ## Validation
 
 Run the standard verification set:
@@ -236,7 +272,6 @@ Run the standard verification set:
 ```bash
 python -m pytest
 python -m compileall cli.py agent_runtime tests
-python cli.py --validate-compatibility
 ```
 
 The layout tests enforce that `.agent/agent.md`, top-level entry documents, and

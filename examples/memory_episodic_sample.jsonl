@@ -1,0 +1,2 @@
+{"id": "a4d3f572-83b4-4e20-928d-93f538e12f68", "timestamp": "2026-05-20T12:00:00Z", "role": "user", "content": "Retrieve the database connection string.", "tool": null}
+{"id": "c8e6b12a-4d2c-49aa-8b5e-436de725b821", "timestamp": "2026-05-20T12:00:05Z", "role": "agent", "content": "{\"status\": \"success\", \"connection\": \"sqlite:///:memory:\"}", "tool": "query_db"}

@@ -20,18 +20,19 @@ def run(params: dict[str, Any]) -> dict[str, Any]:
     Parameters
     ----------
     params:
-        code    : str — Python source to execute (required)
-        timeout : int — seconds before the process is killed (default 10)
+        runtime : str — execution runtime (default "python")
+        command : str — command or Python source to execute (required)
+        code    : str — legacy fallback for command parameter
 
     Returns
     -------
     dict with keys ``stdout``, ``stderr``, and ``exit_code``.
     """
-    code: str = params.get("code", "")
+    code: str = params.get("command", params.get("code", ""))
     timeout: int = int(params.get("timeout", 10))
 
     if not code:
-        return {"error": "Missing required parameter: code", "stdout": "", "stderr": "", "exit_code": 1}
+        return {"error": "Missing required parameter: command", "stdout": "", "stderr": "", "exit_code": 1}
 
     with tempfile.NamedTemporaryFile(suffix=".py", mode="w", delete=False) as tmp:
         tmp.write(code)

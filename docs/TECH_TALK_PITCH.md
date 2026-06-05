@@ -22,12 +22,12 @@ This document contains ready-to-use speaker pitches and slide outlines for submi
 **English:**
 The AI Agent ecosystem is suffering from extreme fragmentation. Developers are stuck choosing between rigid frameworks (LangChain, LlamaIndex) that cause vendor lock-in, or raw APIs that lack persistence for memory, tools, and workflows. 
 
-Enter the **Portable Agent Protocol (PAP)**. In this talk, we introduce an "AI-Native Workspace Protocol" that standardizes agent configurations using a `.agent/` directory. By adopting a "Documentation as Protocol" philosophy, PAP uses human-readable Markdown as the primary interface—allowing both humans and AI to seamlessly read, understand, and modify the workspace. We will demonstrate how PAP avoids framework lock-in, integrates smoothly with Anthropic's Model Context Protocol (MCP), and provides a fully pluggable memory and tool routing architecture in Python. Join us to learn how to future-proof your multi-agent systems!
+Enter the **Portable Agent Protocol (PAP)**. In this talk, we introduce an "AI-Native Workspace Protocol" that standardizes agent configurations using a `.agent/` directory. By adopting a "Documentation as Protocol" philosophy, PAP uses human-readable Markdown as the primary interface—allowing both humans and AI to seamlessly read, understand, and modify the workspace. We will demonstrate how PAP avoids framework lock-in, integrates smoothly with the Model Context Protocol (MCP), and provides a fully pluggable memory and tool routing architecture in Python. Join us to learn how to future-proof your multi-agent systems!
 
 **繁體中文:**
 目前的 AI Agent 生態系正面臨嚴重的碎片化問題。開發者被迫在「容易造成架構鎖定」的重度框架（如 LangChain, LlamaIndex），與「缺乏持久化記憶、工具及工作流機制」的原生 API 之間做選擇。
 
-本次演講將介紹 **Portable Agent Protocol (PAP)**——一個全新的「AI 原生工作區協定」。PAP 透過標準化的 `.agent/` 目錄結構來管理 Agent 狀態，並首創「文件即協定 (Documentation as Protocol)」的設計哲學。我們使用人類可讀的 Markdown 作為主要介面，讓開發者與 AI 都能零障礙地讀取並修改工作區。我將現場展示 PAP 如何打破框架鎖定、無縫橋接 Anthropic 的 MCP (Model Context Protocol) 生態，並展示其在 Python 中強大的可插拔記憶體與工具路由架構。歡迎加入我們，一起探索多智能體系統的未來！
+本次演講將介紹 **Portable Agent Protocol (PAP)**——一個全新的「AI 原生工作區協定」。PAP 透過標準化的 `.agent/` 目錄結構來管理 Agent 狀態，並首創「文件即協定 (Documentation as Protocol)」的設計哲學。我們使用人類可讀的 Markdown 作為主要介面，讓開發者與 AI 都能零障礙地讀取並修改工作區。我將現場展示 PAP 如何打破框架鎖定、無縫橋接 MCP (Model Context Protocol) 生態，並展示其在 Python 中強大的可插拔記憶體與工具路由架構。歡迎加入我們，一起探索多智能體系統的未來！
 
 ---
 

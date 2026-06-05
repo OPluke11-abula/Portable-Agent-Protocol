@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/OPluke11-abula/Portable-Agent-Protocol/main/spec/prompt.schema.json",
+  "title": "Portable Agent Protocol Prompt Schema",
+  "description": "JSON Schema for validating the prompt snippets (front-matter + body).",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "usage",
+    "variables",
+    "template"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique, machine-readable identifier of the prompt snippet.",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of this prompt snippet contract (semver).",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "usage": {
+      "type": "string",
+      "description": "A explanation of when and how to use this prompt."
+    },
+    "variables": {
+      "type": "array",
+      "description": "List of placeholders required by the prompt template.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "template": {
+      "type": "string",
+      "description": "The prompt template text (with {variables} syntax)."
+    }
+  }
+}
