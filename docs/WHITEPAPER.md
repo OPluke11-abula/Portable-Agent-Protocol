@@ -66,15 +66,35 @@ PAP 的設計理念是與新興標準「互補」，而非競爭：
 
 ## 5. Strategic Roadmap / 戰略藍圖
 
-To cement PAP as a community standard, we are executing a three-phase roadmap:
-1. **Phase 1: Maturation (Completed)** - Implementation of rigorous Semantic Versioning (`protocol_version`), CLI Validators, and Pluggable Memory Backends (SQLite, JSON).
-2. **Phase 2: Ecosystem Building** - Introducing DAG-based Executable Workflows and cross-language runtimes (TypeScript/JS) to capture the broader web ecosystem.
-3. **Phase 3: Standardization & Hub** - Launching the `.agent/ Hub`, a public registry where developers can share, fork, and rate Agent profiles, forming a powerful network effect analogous to Docker Hub.
+To cement PAP as a community standard, we have executed a comprehensive five-phase roadmap:
+1. **Phase 1: Foundation & Maturation (Completed)** - Implementation of rigorous Semantic Versioning (`protocol_version`), CLI Validators, and Pluggable Memory Backends (SQLite, JSON).
+2. **Phase 2: Protocol Completeness (Completed)** - Introducing DAG-based Executable Workflows and cross-language runtimes (TypeScript/JS) to capture the broader web ecosystem.
+3. **Phase 3: Quality & Security (Completed)** - Real-time Token Auditing, cost-accounting concurrency locks, auto-failover, and Strict Schema Validation layers.
+4. **Phase 4: Ecosystem & Hub (Completed)** - Launching the public skill registry, CLI integration (`--install-skill`), and package publishing structures.
+5. **Phase 5: Self-Evolution (Completed)** - Self-audit diagnostics, knowledge auto-promotion, and skill contract auto-drafting.
 
-為確立 PAP 的社群標準地位，我們正在執行三階段戰略：
-1. **第一階段：協定成熟化（已完成）** - 實作嚴格的語義版本控制 (`protocol_version`)、CLI 驗證器，以及可插拔的記憶體後端（SQLite, JSON）。
-2. **第二階段：生態建設** - 引入基於 DAG 的可執行工作流引擎，並開發跨語言 Runtime（TypeScript/JS），以觸及更廣大的 Web 開發社群。
-3. **第三階段：標準化與共享平台** - 推出 `.agent/ Hub`，讓開發者能公開分享、分支 (fork) 並評價 Agent 配置，打造類似 Docker Hub 的強大網路效應護城河。
+為確立 PAP 的社群標準地位，我們已經完成了完整的五階段開發藍圖：
+1. **第一階段：協定成熟與基礎（已完成）** - 實作嚴格的語義版本控制 (`protocol_version`)、CLI 驗證器，以及可插拔的記憶體後端（SQLite, JSON）。
+2. **第二階段：協定完整度（已完成）** - 引入基於 DAG 的可執行工作流引擎，並開發跨語言 Runtime（TypeScript/JS），以觸及更廣大的 Web 開發社群。
+3. **第三階段：品質與安全（已完成）** - 實時計費的 Token 審計、併發安全性鎖、帳戶自動容災，以及嚴格的 Schema 靜態與動態驗證層。
+4. **第四階段：生態建設與技能庫（已完成）** - 推出公共技能註冊表 (Registry) 與命令行下載安裝合約功能 (`--install-skill`)，完成打包發布。
+5. **第五階段：自主演進（已完成）** - 自我診斷與審計 (Self-Audit)、情境記憶自動提升為知識、非預期工具呼叫時合約草稿自動生成。
+
+---
+
+## 6. Technical Specifications & Cognitive Hygiene / 技術規範與認知衛生
+
+PAP standardizes not just workspace structures, but also the cognitive behaviors of the agents implementing the protocol:
+
+- **Token Auditing & Failover (Token 審計與容災)**: Real-time price audits hook LLM completion callbacks to count cost metrics. The database is wrapped in file-based locks (`os.O_CREAT | os.O_EXCL`) for process safety.
+- **Strict Schema Validation (嚴格合規校驗)**: Proactive circular dependency checks validate workflow step DAGs. Input/output parameters are strictly checked against JSON Schema types during execution.
+- **Self-Evolution Lifecycle (自主演進生命週期)**: Auto-audit workflows run diagnostics on contract freshness. Memory records are dynamically promoted to knowledge via `KnowledgeBase.promote` with a `status: draft` confirmation gateway. Skill drafts are generated on-the-fly for unregistered tool calls.
+- **Thread-Hopping & Git Safety Gates (執行緒跳轉與安全門戶)**: Turn-based thread rotation (every 5-15 turns) is enforced to prevent context decay. The Analyst role is strictly decoupled from Programmer git operations. Destinations checkouts, reverts, and resets require a `git log -n 5` historical actor synchronization check before execution.
+
+---
+
+**Join the Movement:** By adopting the `.agent/` directory, you are future-proofing your AI projects against framework lock-in. Build with PAP today.
+**加入我們：** 採用 `.agent/` 目錄，讓您的 AI 專案免於框架鎖定的風險。現在就開始使用 PAP 吧！
 
 ---
 

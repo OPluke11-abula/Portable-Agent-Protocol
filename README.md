@@ -243,6 +243,28 @@ python cli.py mcp sync
 
 to discover MCP tools and materialize local skill contracts under `.agent/`.
 
+## Token Auditing & Auto-Failover
+
+PAP runtimes track token consumption and budget limits across multiple API accounts:
+- **Multi-Account Concurrency Lock**: Reads and writes to `accounts.json` utilize retry-based filesystem locking (`.lock` files) to prevent concurrent write collisions.
+- **Dynamic Variable Expansion**: Enforces secure handling of sensitive keys using dynamic environment expansion (e.g., `api_key: "${ENV_VAR}"`).
+- **Auto-Failover**: Intercepts LLM calls, hooks token metadata callbacks to count exact costs, and automatically suspends accounts when rate limits or costs are exhausted, seamlessly falling back to available backup accounts.
+
+## Self-Evolution
+
+PAP enables agents to self-maintain and update their workspaces dynamically:
+- **Agent Self-Audit**: Triggers diagnostic workspace checks (`python cli.py --self-audit`) analyzing contract schemas, memory size limits, and abandoned workflows. Writes health summaries directly to semantic memory (`.agent/memory/semantic/audit_log.json`).
+- **Knowledge Auto-Promotion**: Transition high-value episodic/session memories to semantic database entries utilizing `KnowledgeBase.promote(episodic_id)`. Promoted files are marked as `status: draft` until verified by a human user or Analyst.
+- **Skill Auto-Drafting**: When calling an unregistered tool, the runtime automatically intercepts the call, infers parameter types and docstring structures, and generates a new contract draft under `.agent/skills/drafts/[tool_id].md`.
+
+## PAP Registry
+
+PAP supports sharing and installing community-contributed skill contracts:
+- **Register Skills**: Share verified skills with the public registry directory.
+- **CLI Commands**:
+  - `python cli.py --install-skill <skill_id>` installs skill contracts from the public registry to the local project.
+  - `python cli.py --publish-skill <path>` validates skill contracts against schemas and registers them.
+
 ## Validation
 
 Run the standard verification set:

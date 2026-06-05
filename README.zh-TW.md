@@ -221,6 +221,28 @@ python cli.py mcp sync
 
 即可自動搜尋 MCP 伺服器工具並在 `.agent/` 下生成本地技能合約。
 
+## Token 審計與自動容災 (Token Auditing & Auto-Failover)
+
+PAP 執行期支援在多個 API 帳戶中追蹤 Token 消耗與預算限制：
+- **多帳戶併發鎖**：`accounts.json` 的讀寫利用基於重試的檔案鎖（`.lock` 檔案）來防止多線程或多程序衝突。
+- **動態環境變數展開**：支援在配置中安全地展開敏感金鑰（例如 `api_key: "${ENV_VAR}"`）。
+- **自動容災 (Auto-Failover)**：攔截 LLM 請求並監聽 Token 元資料以計算精確成本，當某帳戶超出限額或失敗時自動標記為掛起 (suspended)，並自動切換至備用帳戶。
+
+## 自我演進 (Self-Evolution)
+
+PAP 允許代理程式動態維護與更新其工作空間：
+- **自我診斷審計 (Self-Audit)**：使用 `python cli.py --self-audit` 檢查技能合約合規性、記憶體檔案大小上限以及懸空的工作流，並將診斷報告寫入語意記憶中（`.agent/memory/semantic/audit_log.json`）。
+- **知識自動升級**：使用 `KnowledgeBase.promote(episodic_id)` 將高價值的情境/對話記憶提升為語意知識庫條目，新升級的知識檔案會預設標記為 `status: draft`，等待人類或分析師驗證。
+- **技能合約草稿自動生成**：當呼叫未註冊的工具時，執行期會攔截呼叫，推斷參數型別與 docstring，並在 `.agent/skills/drafts/[tool_id].md` 自動生成技能合約草稿。
+
+## PAP 技能註冊表 (Registry)
+
+PAP 支援共享與安裝社群貢獻的技能合約：
+- **技能註冊**：共享通過驗證的技能至公共註冊表。
+- **CLI 指令**：
+  - `python cli.py --install-skill <skill_id>`：自註冊表下載並安裝技能合約至本地專案。
+  - `python cli.py --publish-skill <path>`：驗證技能合約格式並將其發布至註冊表。
+
 ## 測試驗證
 
 執行標準的驗證測試集：
