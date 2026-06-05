@@ -198,6 +198,32 @@ class TestAgentEngine:
 
     def test_engine_route_search_web(self, tmp_path: Path) -> None:
         path = _write_agent_md(tmp_path, ["search_web"])
+        skills_dir = tmp_path / "skills"
+        skills_dir.mkdir(parents=True, exist_ok=True)
+        (skills_dir / "search_web.md").write_text(textwrap.dedent("""\
+            ---
+            id: search_web
+            name: search_web
+            description: Web search
+            version: 1.0.0
+            inputs:
+              query:
+                type: string
+                description: search query
+                required: true
+              limit:
+                type: integer
+                description: limit results
+                required: false
+            outputs:
+              results:
+                type: array
+                description: results
+            safety_notes:
+              - None
+            ---
+            # search_web
+        """), encoding="utf-8")
         engine = AgentEngine(config_path=path)
         result = engine.run("search_web", {"query": "pytest", "limit": 2})
         assert len(result["results"]) == 2

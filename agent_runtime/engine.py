@@ -321,7 +321,7 @@ class AgentEngine:
         if self.layout and isinstance(self.layout, dict):
             skills_dir_path = self.layout.get("directories", {}).get("skills")
         if not skills_dir_path:
-            skills_dir_path = Path(".agent/skills")
+            skills_dir_path = self.config_path.parent / "skills"
 
         from .tool_manifest import ToolManifest
         self.tool_manifest = ToolManifest(local_skills_dir=skills_dir_path)
@@ -898,7 +898,6 @@ class AgentEngine:
         """
         self.verify_onboarding_complete()
 
-        from .engine import _project_root_from_config
         project_root = _project_root_from_config(self.config_path)
         session_file = project_root / "runs" / f"{session_id}.json"
 
@@ -908,10 +907,9 @@ class AgentEngine:
                 f"Available session files can be found in the 'runs/' directory."
             )
 
-        import json as _json
         try:
-            session_data = _json.loads(session_file.read_text(encoding="utf-8"))
-        except (_json.JSONDecodeError, OSError) as exc:
+            session_data = json.loads(session_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
             raise ValueError(f"Failed to read session file '{session_file}': {exc}") from exc
 
         workflow_id = session_data.get("workflow_id")
