@@ -81,7 +81,7 @@ Unbounded agent swarms are dangerous and expensive. Restrict complex multi-step 
 
 * **Thread-Safe Account Storage**: Keep API credentials, models, and token statistics in `accounts.json` under concurrency locks.
 * **Real-time Auditing**: Hook LLM provider callbacks to immediately update `prompt_tokens`, `completion_tokens`, and `total_tokens` on every completion or stream chunk.
-* **Failover Protocol**: Immediately check the active account's remaining token budget before calling an LLM. If the budget is exceeded, automatically failover to the next available provider account to protect the developer's vibe coding.
+* **Failover Protocol**: Immediately check the active account's remaining token budget before calling an LLM. If the budget is exceeded, automatically failover to the next available provider account to ensure uninterrupted developer execution flow.
 
 ---
 
