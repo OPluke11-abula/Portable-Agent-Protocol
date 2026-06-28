@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Read-only workspace lint validation for opt-in workflow governance manifests and checkpoints.
 - Opt-in evidence memory schema proposal for L0 raw evidence refs, L1 atoms, L2 scenarios, L3 persona/profile claims, and Mermaid canvas references.
 - Report-only structured review and security findings schema with high/critical exploit path requirements.
+- LAS interop validation plan for ConductorPlan, LongTermMemoryStore, UnifiedPolicyGate, and AuditLedger compatibility.
 
 ---
 

@@ -11,6 +11,8 @@ The opt-in schema surfaces for this governance layer are:
   allowed action, and approval policy metadata.
 - `spec/workflow-checkpoint.schema.json`: checkpoint status, artifact hash,
   evidence references, verifier metadata, and unresolved risks.
+- `docs/las-interop-validation-plan.md`: LAS consumption and verification plan
+  for workflow, checkpoint, evidence memory, and review-gate fields.
 
 Opt-in governance records are discovered by the workspace linter from:
 
