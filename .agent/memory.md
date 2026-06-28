@@ -74,6 +74,25 @@ print(engine.memory.read("session_id"))
 
 ## Schema
 
+### Evidence memory proposal
+
+Evidence memory is an opt-in proposal schema for traceable long-term memory. It
+does not change the runtime memory backend contract and does not enable
+automatic capture hooks, daemons, OpenClaw patches, or remote memory gateways.
+
+Use `spec/evidence-memory.schema.json` for records that need:
+
+- `l0_raw_evidence_refs`: raw files, command outputs, logs, URLs, or manual
+  observations.
+- `l1_atoms`: summarized atomic claims with required `trace_refs`.
+- `l2_scenarios`: scenario summaries composed from atoms or raw evidence.
+- `l3_profile`: persona/profile claims, each with required `trace_refs`.
+- `mermaid_canvases`: canvas references carrying `node_id`, `result_ref`, and
+  `trace_refs`.
+
+Every summarized memory claim must trace back to raw evidence, a canonical
+artifact, or an already-traced lower-level memory record.
+
 ### context.json
 
 ```json

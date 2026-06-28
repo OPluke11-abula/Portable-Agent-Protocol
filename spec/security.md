@@ -64,3 +64,33 @@ Every skill call routed through `AgentEngine.call_skill()` is subjected to the t
 
 - The local test suite (`tests/test_security.py`) enforces strict validation across all four threat dimensions.
 - Every commit must achieve **100% green test passes** and maintain coverage at or above **80%**.
+
+---
+
+## 4. Structured Review and Security Findings
+
+PAP review and security gates may emit report-only findings validated by
+`spec/review-findings.schema.json`. The schema records:
+
+- `verdict`
+- `severity`
+- `source_trace`
+- `impact`
+- `remediation`
+- `validation_status`
+- `exploit_path` for `high` and `critical` findings
+
+The default execution policy is report-only:
+
+```json
+{
+  "execution_policy": {
+    "mode": "report_only",
+    "parallel_audit_agents": false
+  }
+}
+```
+
+This schema is a validation surface for findings, not an audit runner. It does
+not enable parallel audit agents, exploitation, destructive testing, credential
+use, or external scanning by default.

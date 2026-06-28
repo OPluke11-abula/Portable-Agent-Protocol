@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/OPluke11-abula/Portable-Agent-Protocol/main/spec/workflow-manifest.schema.json",
+  "title": "Portable Agent Protocol Opt-In Workflow Manifest Schema",
+  "description": "Opt-in governance manifest for PAP workflows. This schema supplements existing DAG workflow definitions without changing legacy workflow requirements.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "workflow_id",
+    "stages"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^v?\\d+\\.\\d+\\.\\d+$"
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/stage"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "required": [
+        "id",
+        "director",
+        "canonical_artifacts",
+        "allowed_actions",
+        "approval_policy"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "director": {
+          "$ref": "#/$defs/director"
+        },
+        "canonical_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/canonical_artifact"
+          }
+        },
+        "allowed_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write",
+              "validate",
+              "report",
+              "execute",
+              "external_state"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "approval_policy": {
+          "$ref": "#/$defs/approval_policy"
+        }
+      },
+      "additionalProperties": true
+    },
+    "director": {
+      "type": "object",
+      "required": [
+        "role"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "programmer",
+            "reviewer",
+            "security",
+            "maintainer",
+            "orchestrator"
+          ]
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "canonical_artifact": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "manifest",
+            "schema",
+            "checkpoint",
+            "report",
+            "review",
+            "handoff",
+            "evidence",
+            "artifact"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "approval_policy": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "interactive",
+            "review",
+            "explicit"
+          ]
+        },
+        "required_for": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write",
+              "validate",
+              "report",
+              "execute",
+              "external_state"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "approvers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [Unreleased]
+
+### Added
+- Opt-in workflow governance manifest schema for stages, directors, canonical artifacts, allowed actions, and approval policy.
+- Workflow checkpoint schema for artifact hashes, evidence references, verifier metadata, unresolved risks, and checkpoint status.
+- Read-only workspace lint validation for opt-in workflow governance manifests and checkpoints.
+- Opt-in evidence memory schema proposal for L0 raw evidence refs, L1 atoms, L2 scenarios, L3 persona/profile claims, and Mermaid canvas references.
+- Report-only structured review and security findings schema with high/critical exploit path requirements.
+
+---
+
 ## [0.1.0] - 2026-05-20
 
 ### Added

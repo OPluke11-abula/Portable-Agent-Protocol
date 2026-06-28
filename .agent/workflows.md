@@ -33,3 +33,5 @@ See:
 - `.agent/workflows/__init__.md`
 - `.agent/workflows/research_and_report.md`
 - `.agent/workflows/run_and_explain.md`
+- `docs/workflow-governance.md` for Phase 6 workflow governance rules that are
+  documentation-only and not executable DAG definitions.
