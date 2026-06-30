@@ -142,6 +142,86 @@ depends  : 0-03, 5-01
 
 ---
 
+## PHASE 6 - LAS/PAP Workflow, Evidence Memory, and Review Gate Alignment
+
+> Source plan: `D:\GitHub\LLM-Agent-System\docs\architecture\las-pap-collaboration-memory-security-plan.md`
+> Handoff for next PAP thread: `C:\tmp\PAP_thread\handoff.md`
+> Required onboarding: read `.agent/agent.md`, `.agent/skills.md`, `agent_tasks.md`, `.agent/handoff_guide.md`, then `.agent/routing.md` before execution.
+
+### 6-01 PAP Workflow Governance Scaffold
+
+```
+priority : HIGH
+effort   : M
+depends  : 5-01
+```
+
+- [ ] Add lightweight workflow governance docs for source-of-truth order, risk policy, review protocol, and handoff schema.
+- [ ] Ensure the docs preserve PAP's Brain and Hands decoupling and deterministic routing rules.
+- [ ] Keep README free of internal task logs; update only protocol-facing docs unless a user-facing capability changes.
+
+### 6-02 Workflow Manifest and Checkpoint Schemas
+
+```
+priority : HIGH
+effort   : M
+depends  : 6-01
+```
+
+- [ ] Add opt-in PAP workflow manifest schema for stages, directors, canonical artifacts, allowed actions, and approval policy.
+- [ ] Add checkpoint schema with artifact hash, evidence refs, verifier, unresolved risks, and status.
+- [ ] Keep all new schema fields backward compatible with existing PAP workspaces.
+
+### 6-03 Read-Only Workflow Linter
+
+```
+priority : HIGH
+effort   : M
+depends  : 6-02
+```
+
+- [ ] Implement a read-only workflow linter that validates workflow manifests and checkpoints without executing stage actions.
+- [ ] Reject missing required fields, workspace path escapes, invalid checkpoint status, and missing evidence refs where required.
+- [ ] Add pytest coverage for valid, invalid, and backward-compatible workflow manifests.
+
+### 6-04 Evidence Memory Schema Proposal
+
+```
+priority : MEDIUM
+effort   : M
+depends  : 6-02
+```
+
+- [ ] Define protocol fields for L0 raw evidence refs, L1 atoms, L2 scenarios, L3 persona/profile, Mermaid canvas refs, `node_id`, and `result_ref`.
+- [ ] Require every summarized memory claim to trace back to raw evidence or a canonical artifact.
+- [ ] Do not add automatic capture hooks, daemons, OpenClaw patches, or remote memory gateways.
+
+### 6-05 Structured Review and Security Findings Schema
+
+```
+priority : HIGH
+effort   : M
+depends  : 6-02
+```
+
+- [ ] Add structured review/security findings schema with verdict, severity, source trace, impact, remediation, and validation status.
+- [ ] Require high/critical findings to include both exploit path and impact.
+- [ ] Keep security review report-only by default and do not enable parallel audit agents unless the user explicitly asks.
+
+### 6-06 LAS Interop Validation Plan
+
+```
+priority : MEDIUM
+effort   : S
+depends  : 6-03, 6-04, 6-05
+```
+
+- [ ] Document how LAS will consume PAP workflow, checkpoint, evidence-ref, memory, and review-gate fields.
+- [ ] Include compatibility checks for LAS `ConductorPlan`, `LongTermMemoryStore`, `UnifiedPolicyGate`, and `AuditLedger`.
+- [ ] Provide exact verification commands for both PAP and LAS before declaring the protocol extension ready.
+
+---
+
 ## Task Summary
 
 | Phase | 任務數 | 預估規模 |
@@ -152,7 +232,8 @@ depends  : 0-03, 5-01
 | PHASE 3 Quality | 5 tasks, 26 items | 品質保證 |
 | PHASE 4 Ecosystem | 3 tasks, 16 items | 生態建設 |
 | PHASE 5 Self-Evolution | 3 tasks, 12 items | 長期目標 |
-| **Total** | **33 tasks** | **177 items** |
+| PHASE 6 Workflow Alignment | 6 tasks, 18 items | Pending |
+| **Total** | **39 tasks** | **195 items** |
 
 ---
 

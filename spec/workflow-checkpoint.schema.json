@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/OPluke11-abula/Portable-Agent-Protocol/main/spec/workflow-checkpoint.schema.json",
+  "title": "Portable Agent Protocol Workflow Checkpoint Schema",
+  "description": "Schema for resumable workflow checkpoint records with artifact integrity, evidence references, verification metadata, unresolved risks, and status.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "checkpoint_id",
+    "workflow_id",
+    "stage_id",
+    "artifact_hash",
+    "evidence_refs",
+    "verifier",
+    "unresolved_risks",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^v?\\d+\\.\\d+\\.\\d+$"
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "stage_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "artifact_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-fA-F0-9]{64}$"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence_ref"
+      }
+    },
+    "verifier": {
+      "$ref": "#/$defs/verifier"
+    },
+    "unresolved_risks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/$defs/risk"
+          }
+        ]
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "passed",
+        "failed",
+        "blocked",
+        "skipped",
+        "superseded"
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "evidence_ref": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "uri"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "file",
+            "command",
+            "url",
+            "artifact",
+            "memory",
+            "log"
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_ref": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "verifier": {
+      "type": "object",
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "command",
+            "schema",
+            "reviewer",
+            "runtime",
+            "manual"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "risk": {
+      "type": "object",
+      "required": [
+        "id",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

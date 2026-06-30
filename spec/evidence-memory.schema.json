@@ -1,0 +1,302 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/OPluke11-abula/Portable-Agent-Protocol/main/spec/evidence-memory.schema.json",
+  "title": "Portable Agent Protocol Evidence Memory Schema Proposal",
+  "description": "Opt-in schema proposal for traceable evidence memory. It defines L0 raw evidence references, L1 memory atoms, L2 scenarios, L3 persona/profile claims, and Mermaid canvas references without enabling automatic capture hooks or remote memory gateways.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "memory_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^v?\\d+\\.\\d+\\.\\d+$"
+    },
+    "memory_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "l0_raw_evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/raw_evidence_ref"
+      },
+      "default": []
+    },
+    "canonical_artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/canonical_artifact_ref"
+      },
+      "default": []
+    },
+    "l1_atoms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/memory_atom"
+      },
+      "default": []
+    },
+    "l2_scenarios": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/memory_scenario"
+      },
+      "default": []
+    },
+    "l3_profile": {
+      "$ref": "#/$defs/persona_profile"
+    },
+    "mermaid_canvases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mermaid_canvas_ref"
+      },
+      "default": []
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "result_ref": {
+      "type": "string",
+      "description": "Stable pointer to a produced result, artifact hash, command result, or raw observation."
+    },
+    "trace_ref": {
+      "type": "object",
+      "required": [
+        "ref_type",
+        "ref_id"
+      ],
+      "properties": {
+        "ref_type": {
+          "type": "string",
+          "enum": [
+            "raw_evidence",
+            "canonical_artifact",
+            "memory_atom",
+            "scenario",
+            "profile_claim",
+            "mermaid_canvas"
+          ]
+        },
+        "ref_id": {
+          "$ref": "#/$defs/id"
+        },
+        "node_id": {
+          "$ref": "#/$defs/id"
+        },
+        "result_ref": {
+          "$ref": "#/$defs/result_ref"
+        }
+      },
+      "additionalProperties": true
+    },
+    "trace_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/trace_ref"
+      }
+    },
+    "raw_evidence_ref": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "uri"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "file",
+            "command",
+            "url",
+            "artifact",
+            "log",
+            "memory",
+            "manual"
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "result_ref": {
+          "$ref": "#/$defs/result_ref"
+        }
+      },
+      "additionalProperties": true
+    },
+    "canonical_artifact_ref": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "manifest",
+            "schema",
+            "checkpoint",
+            "report",
+            "review",
+            "handoff",
+            "evidence",
+            "artifact",
+            "canvas"
+          ]
+        },
+        "result_ref": {
+          "$ref": "#/$defs/result_ref"
+        }
+      },
+      "additionalProperties": true
+    },
+    "memory_atom": {
+      "type": "object",
+      "required": [
+        "id",
+        "claim",
+        "trace_refs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "trace_refs": {
+          "$ref": "#/$defs/trace_refs"
+        }
+      },
+      "additionalProperties": true
+    },
+    "memory_scenario": {
+      "type": "object",
+      "required": [
+        "id",
+        "summary",
+        "trace_refs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "atom_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "trace_refs": {
+          "$ref": "#/$defs/trace_refs"
+        }
+      },
+      "additionalProperties": true
+    },
+    "persona_profile": {
+      "type": "object",
+      "required": [
+        "id",
+        "claims"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "persona": {
+          "type": "string"
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profile_claim"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "profile_claim": {
+      "type": "object",
+      "required": [
+        "id",
+        "claim",
+        "trace_refs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trace_refs": {
+          "$ref": "#/$defs/trace_refs"
+        }
+      },
+      "additionalProperties": true
+    },
+    "mermaid_canvas_ref": {
+      "type": "object",
+      "required": [
+        "id",
+        "node_id",
+        "result_ref",
+        "trace_refs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "node_id": {
+          "$ref": "#/$defs/id"
+        },
+        "result_ref": {
+          "$ref": "#/$defs/result_ref"
+        },
+        "trace_refs": {
+          "$ref": "#/$defs/trace_refs"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

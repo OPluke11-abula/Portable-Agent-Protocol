@@ -119,3 +119,22 @@ To design clean, reliable agent workflows:
 * **Always Declare `depends_on` Explicitly**: If Step B uses interpolated values from Step A (e.g. `{StepA.output_field}`), Step B *must* list `StepA` in its `depends_on` array. This ensures correct topological scheduling.
 * **Handle Tool Failure Graces**: Ensure your custom tool handlers return structured errors or empty sets rather than raising unhandled exceptions, allowing subsequent steps to inspect the `status` and handle anomalies safely.
 * **Keep Graph Paths Directed & Acyclic**: Ensure that information always flows forward in a clear direction. Avoid loops in your workflow declarations.
+
+## 6. Opt-In Governance Schemas
+
+Existing `.agent/workflows/*.md` DAG files remain valid with the original
+`spec/workflow.schema.json`. Workspaces that need stricter collaboration and
+review gates can add separate governance records validated by:
+
+- `spec/workflow-manifest.schema.json` for stages, directors, canonical
+  artifacts, allowed actions, and approval policy.
+- `spec/workflow-checkpoint.schema.json` for resumable checkpoints with artifact
+  hashes, evidence references, verifier metadata, unresolved risks, and status.
+
+The reference linter discovers opt-in records in
+`.agent/workflows/governance/manifests/*.json` and
+`.agent/workflows/governance/checkpoints/*.json`. It validates schemas and local
+workspace paths without executing stages or tool actions.
+
+These schemas are additive and opt-in. They do not require existing PAP
+workspaces to rewrite current workflow DAG definitions.

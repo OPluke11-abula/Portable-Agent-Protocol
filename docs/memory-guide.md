@@ -130,3 +130,28 @@ To build robust agents, keep these memory paradigms in mind:
 * **JSON Serializability**: Only store basic JSON-compatible data types (strings, numbers, booleans, lists, and dicts) in semantic memory. Complex Python objects (like file handles or socket connections) cannot be serialized.
 * **Write Small, Atomic Keys**: Prefer saving granular parameters (e.g. `current_index: 12`) over storing massive, nested data tables in semantic memory. Use the local workspace filesystem or a database database for massive payloads, keeping memory agile.
 * **Use Handoff Checksums**: Always allow the protocol to verify checksums during multi-agent transfers. This safeguards the destination agent against malicious state injections or transmission corruption.
+
+---
+
+## 5. Evidence Memory Proposal
+
+PAP also defines an opt-in evidence memory proposal in
+`spec/evidence-memory.schema.json`. This proposal is for workspaces that need
+traceable summarized memory without changing existing semantic, episodic, or
+handoff backends.
+
+The proposal defines these layers:
+
+| Layer | Field | Purpose |
+| --- | --- | --- |
+| L0 | `l0_raw_evidence_refs` | Raw files, command outputs, URLs, logs, artifacts, or manual observations. |
+| L1 | `l1_atoms` | Atomic summarized claims. Each atom requires `trace_refs`. |
+| L2 | `l2_scenarios` | Scenario summaries composed from atoms or evidence. Each scenario requires `trace_refs`. |
+| L3 | `l3_profile` | Persona/profile claims. Each profile claim requires `trace_refs`. |
+| Canvas | `mermaid_canvases` | Mermaid canvas references with `node_id`, `result_ref`, and `trace_refs`. |
+
+Every summarized memory claim must trace back to raw evidence, a canonical
+artifact, or an already-traced lower-level memory record. The schema is
+documentation and validation surface only. It does not install automatic capture
+hooks, start memory daemons, patch OpenClaw, or configure remote memory
+gateways.

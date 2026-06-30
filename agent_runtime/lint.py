@@ -127,6 +127,9 @@ class WorkspaceLinter:
         # 4. Check workflow files & DAG
         self.check_workflows()
 
+        # 4b. Check optional workflow governance records
+        self.check_workflow_governance()
+
         # 5. Decoupling Static Linter checks (Task 2-06)
         self.check_decoupling()
 
@@ -586,6 +589,111 @@ class WorkspaceLinter:
                 sid = step["id"]
                 params = step.get("params") or {}
                 check_references(params, sid)
+
+    def check_workflow_governance(self) -> None:
+        """Validate opt-in workflow governance manifests and checkpoints without executing them."""
+        governance_dir = self.agent_dir / "workflows" / "governance"
+        if not governance_dir.is_dir():
+            return
+
+        checks = (
+            ("manifests", "workflow-manifest.schema.json", self._check_workflow_manifest_paths),
+            ("checkpoints", "workflow-checkpoint.schema.json", self._check_workflow_checkpoint_paths),
+        )
+        for folder_name, schema_name, path_check in checks:
+            folder = governance_dir / folder_name
+            if not folder.is_dir():
+                continue
+
+            schema = self._load_schema(schema_name)
+            for file_path in folder.glob("*.json"):
+                try:
+                    data = json.loads(file_path.read_text(encoding="utf-8"))
+                except Exception as e:
+                    self.issues.append(
+                        LintIssue(
+                            severity="error",
+                            file_path=file_path,
+                            message=f"Workflow governance JSON parse error: {e}",
+                        )
+                    )
+                    continue
+
+                if schema and jsonschema:
+                    validator = jsonschema.Draft7Validator(schema)
+                    for error in sorted(validator.iter_errors(data), key=lambda err: list(err.path)):
+                        path_str = ".".join(str(p) for p in error.path) or "root"
+                        self.issues.append(
+                            LintIssue(
+                                severity="error",
+                                file_path=file_path,
+                                message=f"Workflow governance schema validation error at {path_str}: {error.message}",
+                            )
+                        )
+
+                path_check(file_path, data)
+
+    def _check_workflow_manifest_paths(self, file_path: Path, data: dict[str, Any]) -> None:
+        stages = data.get("stages") or []
+        if not isinstance(stages, list):
+            return
+        for stage in stages:
+            if not isinstance(stage, dict):
+                continue
+            for artifact in stage.get("canonical_artifacts") or []:
+                if not isinstance(artifact, dict):
+                    continue
+                artifact_path = artifact.get("path")
+                if isinstance(artifact_path, str):
+                    self._check_workspace_relative_path(file_path, artifact_path, "canonical artifact path")
+
+    def _check_workflow_checkpoint_paths(self, file_path: Path, data: dict[str, Any]) -> None:
+        evidence_refs = data.get("evidence_refs") or []
+        if not isinstance(evidence_refs, list):
+            return
+        local_ref_kinds = {"file", "artifact", "memory", "log"}
+        for evidence_ref in evidence_refs:
+            if not isinstance(evidence_ref, dict):
+                continue
+            if evidence_ref.get("kind") not in local_ref_kinds:
+                continue
+            uri = evidence_ref.get("uri")
+            if isinstance(uri, str):
+                self._check_workspace_relative_path(file_path, uri, "evidence ref uri")
+
+    def _check_workspace_relative_path(self, file_path: Path, raw_path: str, label: str) -> None:
+        candidate = Path(raw_path)
+        if candidate.is_absolute():
+            self.issues.append(
+                LintIssue(
+                    severity="error",
+                    file_path=file_path,
+                    message=f"Workflow governance {label} '{raw_path}' escapes the workspace.",
+                )
+            )
+            return
+
+        try:
+            resolved = (self.project_root / candidate).resolve()
+            root = self.project_root.resolve()
+        except Exception:
+            self.issues.append(
+                LintIssue(
+                    severity="error",
+                    file_path=file_path,
+                    message=f"Workflow governance {label} '{raw_path}' cannot be resolved safely.",
+                )
+            )
+            return
+
+        if resolved != root and root not in resolved.parents:
+            self.issues.append(
+                LintIssue(
+                    severity="error",
+                    file_path=file_path,
+                    message=f"Workflow governance {label} '{raw_path}' escapes the workspace.",
+                )
+            )
 
     def check_decoupling(self) -> None:
         """Enforce decoupling of Brain (knowledge base / skills) and Hands (runtime tools)."""
